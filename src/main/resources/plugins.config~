@@ -12,6 +12,10 @@
 Plugins>OPT, "Forward Project", Forward_Project
 Plugins>3DTools, "Correct Flatness", splugins.Correct_Flatness
 Plugins>Binning_Tools, "Bin image", splugins.Bin_Image
+<<<<<<< HEAD
 Plugins>Binning_Tools, "Yo momma so fat", splugins.Calculate_Spatial_Correlation
+Plugins>ABC, "My", splugins.My_Plugins
+=======
+Plugins>Binning_Tools, "Yo momma", splugins.Calculate_Spatial_Correlation
 Plugins>ABC, "My tabletop", splugins.My_Plugins
-
+>>>>>>> 048f7416f891b013f4c0e54aa648ce2e086e827f
