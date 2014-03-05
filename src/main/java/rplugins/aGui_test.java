@@ -1,3 +1,4 @@
+package rplugins;
 //To create a new GUI, Rename this file "new_filename", then find and replace all instences of
 //"aGui_test" with "new_filename".
 

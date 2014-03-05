@@ -1,3 +1,4 @@
+package rplugins;
 //**********
 //Given user inputed folder, this plugin finds all ROI zip files with the specified
 //naming convention, sums the number of ROIs in those files, and creates a new file

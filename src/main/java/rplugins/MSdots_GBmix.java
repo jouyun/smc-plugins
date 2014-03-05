@@ -1,3 +1,4 @@
+package rplugins;
 import ij.*;
 import ij.io.*;
 import ij.process.*;
