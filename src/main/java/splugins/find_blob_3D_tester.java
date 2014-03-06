@@ -150,11 +150,11 @@ public class find_blob_3D_tester implements PlugIn {
 			}			
 		}
 		
-		byte [] byte_arr=Dilate3D.make_3D_byte(new_img, 0, 0);
+		/*byte [] byte_arr=Dilate3D.make_3D_byte(new_img, 0, 0);
 		byte [] new_byte_arr=Dilate3D.dilate_me(byte_arr, width, height, depth);
 		ImagePlus new_img2=Dilate3D.make_3D_ImagePlusByte(new_byte_arr, width, height, depth);
 		new_img2.show(); 
-		new_img2.updateAndDraw();
+		new_img2.updateAndDraw();*/
 		
 		the_table.show("Results");
 		IJ.log(""+number_big_enough);
