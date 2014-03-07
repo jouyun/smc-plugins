@@ -1,3 +1,4 @@
+package rplugins;
 import ij.*;
 import ij.process.*;
 import ij.gui.*;
@@ -54,9 +55,9 @@ public class Bezier implements PlugIn {
 		
 	}
 	
-	public double[] getBezierCurveMid(Point p0, Point p1, Point p2, Point p3){
-		
-	}
+//	public double[] getBezierCurveMid(Point p0, Point p1, Point p2, Point p3){
+//		
+//	}
 	
 	public double[] getBezierCurveStart(Point p0, Point p1, Point p2, Point p3){
 		double p0x = p1.getX();

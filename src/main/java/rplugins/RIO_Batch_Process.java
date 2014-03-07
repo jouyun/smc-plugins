@@ -1,3 +1,4 @@
+package rplugins;
 //**********
 //Given user inputed folder, this plugin ...
 //Created by Richard Alexander (RLA) for the Linheng Li Lab and the Stowers Institute for Medical Research.

@@ -1,3 +1,4 @@
+package rplugins;
 //  This plugin deletes user inputed range of slices from every .tif image in a folder. More detailed instructions
 //  are given at startup.
 //  Plugin written by Richard Alexander (RLA) for Limei Ma and the Stowers Institute for Medical Research.

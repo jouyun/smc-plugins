@@ -1,3 +1,4 @@
+package rplugins;
 
 import ij.*;
 import ij.plugin.filter.PlugInFilter;
@@ -24,7 +25,7 @@ import java.lang.reflect.*;
 
 		public int setup(String arg, ImagePlus img) {
 		this.img = img;
-		IJ.register(Mouse_Listener.class);
+		IJ.register(RLA_Mouse_Listener.class);
 		return DOES_ALL+NO_CHANGES;
 		}
 

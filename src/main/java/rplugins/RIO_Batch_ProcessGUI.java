@@ -1,3 +1,4 @@
+package rplugins;
 //**********
 //Given user inputed folder, this plugin gets FileInfo for every image in the folder (without opening for TIF),
 //measures the stack size,and remembers the smallest stack size. It then opens each image and
@@ -19,7 +20,7 @@ import java.awt.Rectangle;
 import ij.gui.*;
 import ij.macro.Interpreter;
 
-public class RIO_Batch_Process implements PlugIn {
+public class RIO_Batch_ProcessGUI implements PlugIn {
 
 	//public int TOTslices = 999999;	//This variable keeps track of the smallest stack.
 	public File dir;

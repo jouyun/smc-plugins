@@ -1,3 +1,4 @@
+package rplugins;
 //**********
 //This macro performs the same function as the "multi" button in the multi measure plugin.
 //The functions below were taken from that plugin and modified into a batch-able format.

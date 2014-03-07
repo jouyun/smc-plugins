@@ -1,3 +1,4 @@
+package rplugins;
 //*****************************************************
 //  This plugin draws a line on an image stack. The user inputs a CSV file,
 //  with the frame number, x1, y1, x2, and y2 (the start and end point of the line).

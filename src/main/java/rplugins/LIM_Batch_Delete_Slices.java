@@ -1,3 +1,4 @@
+package rplugins;
 //**********
 //Given user inputed folder, this plugin gets FileInfo for every image in the folder (without opening for TIF),
 //measures the stack size,and remembers the smallest stack size. It then opens each image and
