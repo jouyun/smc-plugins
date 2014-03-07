@@ -76,6 +76,37 @@ public class Utility3D  {
 	int width, height, depth;
 	short pixel_array[];
 	ArrayList<int []> current_list;
+	public static ArrayList <ArrayList <int []>> get_labeled_blobs(short [] input, int w, int h, int d)
+	{
+		short max=0;
+		for (int i=0; i<w*h*d; i++) 
+		{
+			if (input[i]>max) max=input[i];
+		}
+		ArrayList<ArrayList <int []>> rtnlist=new ArrayList<ArrayList <int []>>();
+		for (int i=0; i<max; i++)
+		{
+			rtnlist.add(new ArrayList<int []>());
+		}
+		for (int i=0; i<d; i++) 
+		{
+			for (int j=0; j<h; j++)
+			{
+				for (int k=0; k<w; k++)
+				{
+					short tst=input[k+j*w+i*w*h];
+					if (tst>(short)0) 
+					{
+						int [] tmp={k,j,i};
+						rtnlist.get(tst-1).add(tmp);
+					}
+				}
+			}
+			
+		}
+		return rtnlist;
+	}
+	
 	public void grow_until_neighbor (short [] input, int wid, int het, int dep)
 	{
 		width=wid;
@@ -83,31 +114,9 @@ public class Utility3D  {
 		depth=dep;
 		int max=0;
 		pixel_array =input; 
-		for (int i=0; i<width*height*depth; i++) 
-		{
-			if (input[i]>max) max=input[i];
-		}
-		ArrayList<ArrayList <int []>> mylist=new ArrayList<ArrayList <int []>>();
-		for (int i=0; i<max; i++)
-		{
-			mylist.add(new ArrayList<int []>());
-		}
-		for (int i=0; i<depth; i++) 
-		{
-			for (int j=0; j<height; j++)
-			{
-				for (int k=0; k<width; k++)
-				{
-					short tst=input[k+j*width+i*width*height];
-					if (tst>(short)0) 
-					{
-						int [] tmp={k,j,i};
-						mylist.get(tst-1).add(tmp);
-					}
-				}
-			}
-			
-		}
+		
+		ArrayList <ArrayList <int []>> mylist = get_labeled_blobs(input, wid, het, dep);
+		
 		boolean had_new=true;
 		while (had_new)
 		{
