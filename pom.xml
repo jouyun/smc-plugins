@@ -12,15 +12,19 @@
 		<relativePath />
 	</parent>
 
-	<groupId>sc.fiji</groupId>
-	<artifactId>Sean_Plugins</artifactId>
+	<groupId>microscopy.plugins</groupId>
+	<artifactId>SMC_Plugins</artifactId>
 	<version>1.0.0</version>
 
-	<name>plugins/Sean_Pluginsjar</name>
+	<name>plugins/SMC_Pluginsjar</name>
 	<description>A Maven project implementing an ImageJ 1.x plugin</description>
 <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <imagej.app.directory>C:\Fiji.app</imagej.app.directory>
+<<<<<<< HEAD
+=======
+    <imagej1.version>1.48r</imagej1.version>
+>>>>>>> 4f5cbf8f6678f52a462789cfbc806c115156e726
     <delete.other.versions>true</delete.other.versions>
   </properties>
 	<dependencies>
