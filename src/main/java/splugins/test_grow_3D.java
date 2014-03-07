@@ -74,10 +74,13 @@ public class test_grow_3D implements PlugIn {
 
 	public void run(String arg) {
 		ImagePlus img=WindowManager.getCurrentImage();
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices();
 		Utility3D my3D=new Utility3D();
-		short [] arr=Utility3D.ip_to_array(img);
-		my3D.grow_until_neighbor(arr,  img.getWidth(),  img.getHeight(), img.getNSlices());
-		ImagePlus new_img=Utility3D.array_to_ip(arr,  img.getWidth(),  img.getHeight(),  img.getNSlices());
+		//short [] arr=Utility3D.ip_to_array(img);
+		//my3D.grow_until_neighbor(arr,  img.getWidth(),  img.getHeight(), img.getNSlices());
+		ArrayList <ArrayList <int []>> mylist=my3D.find_blobs((byte []) img.getProcessor().getPixels(),  img.getWidth(), img.getHeight(),  img.getNSlices());
+		short [] arr=my3D.blobarray_to_imgarray(mylist, width, height, slices);
+		ImagePlus new_img=Utility3D.imgarray_to_ip(arr,  img.getWidth(),  img.getHeight(),  img.getNSlices());
 		new_img.show();
 		new_img.updateAndDraw();
 	}

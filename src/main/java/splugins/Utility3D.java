@@ -75,8 +75,15 @@ public class Utility3D  {
 
 	int width, height, depth;
 	short pixel_array[];
-	ArrayList<int []> current_list;
-	public static ArrayList <ArrayList <int []>> get_labeled_blobs(short [] input, int w, int h, int d)
+	int [] status_array;
+	ArrayList <int []> current_list;
+	ArrayList <int []> current_new_list;
+	ArrayList <int []> new_new_list;
+	
+	//This takes an already indexed short image and provides the ArrayList associated with it, it will create
+	//an entry all the way up to the max value in input, many of which might be blank
+	//NOTE:  Index 0 will have things that were labeled 1 in the input image
+	public static ArrayList <ArrayList <int []>> find_labeled_blobs(short [] input, int w, int h, int d)
 	{
 		short max=0;
 		for (int i=0; i<w*h*d; i++) 
@@ -106,7 +113,89 @@ public class Utility3D  {
 		}
 		return rtnlist;
 	}
-	
+	//This takes a (simply thresholded, but converted to short) image and creates the ArrayList for it
+	public ArrayList <ArrayList <int []>> find_blobs(short [] pix, int w, int h, int d)
+	{
+		width=w;
+		height=h;		
+		depth=d;
+		status_array=new int[width*height*depth];
+		ArrayList<ArrayList <int []>> rtnlist=new ArrayList<ArrayList <int []>>();
+		current_new_list=new ArrayList<int []>();
+		new_new_list=new ArrayList<int []>();
+		current_list=new ArrayList<int []>();
+		IJ.log(""+pix.length);
+		for (int k=0; k<depth; k++)
+		{
+			for (int i=0; i<width; i++)
+			{
+				for (int j=0; j<height; j++)
+				{
+					if (pix[k*width*height+j*width+i]==(short)0) continue;
+					status_array[k*width*height+j*width+i]=1;
+				}
+			}
+		}
+		for (int k=0; k<depth; k++)
+		{
+			for (int i=0; i<width; i++)
+			{
+				for (int j=0; j<height; j++)
+				{
+					if (status_array[j*width+i+k*width*height]==0) continue;
+					int [] tmp=new int[3];
+					tmp[0]=i;
+					tmp[1]=j;
+					tmp[2]=k;
+					current_list=new ArrayList<int []>();
+					current_new_list.clear();
+					current_list.add(tmp);
+					current_new_list.add(tmp);
+					status_array[j*width+i]=0;
+					boolean no_new=false;
+					while (no_new==false)
+					{
+						int ctr=0;
+						for (ListIterator jF=current_new_list.listIterator(); jF.hasNext();)
+						{
+							int [] current_point=(int [])jF.next();
+							if (check_neighbor(current_point[0]+1, current_point[1], current_point[2])) ctr++;
+							if (check_neighbor(current_point[0]-1, current_point[1], current_point[2])) ctr++;
+							if (check_neighbor(current_point[0], current_point[1]+1, current_point[2])) ctr++;
+							if (check_neighbor(current_point[0], current_point[1]-1, current_point[2])) ctr++;
+							if (check_neighbor(current_point[0], current_point[1], current_point[2]+1)) ctr++;
+							if (check_neighbor(current_point[0], current_point[1], current_point[2]-1)) ctr++;
+						}
+						current_new_list.clear();
+						for (ListIterator jF=new_new_list.listIterator(); jF.hasNext();)
+						{
+							int [] current_point=(int [])jF.next();
+							current_new_list.add(current_point);
+						}
+						new_new_list.clear();
+						if (ctr==0) no_new=true;
+					}
+					//Add this list to the master list
+					rtnlist.add(current_list);
+				}
+			}
+		}
+		return rtnlist;
+	}
+	//This is the check neighbor for finding the extent of the blobs, it is NOT to be used for growing
+	boolean check_neighbor(int x, int y, int z)
+	{
+		if (x<0||x==width||y<0||y==height||z<0||z==depth) return false;
+		if (status_array[x+y*width+z*height*width]==0) return false;
+		int [] tmp=new int [3];
+		tmp[0]=x;
+		tmp[1]=y;
+		tmp[2]=z;
+		new_new_list.add(tmp);
+		current_list.add(tmp);
+		status_array[x+y*width+z*width*height]=0;
+		return true;
+	}
 	public void grow_until_neighbor (short [] input, int wid, int het, int dep)
 	{
 		width=wid;
@@ -115,7 +204,7 @@ public class Utility3D  {
 		int max=0;
 		pixel_array =input; 
 		
-		ArrayList <ArrayList <int []>> mylist = get_labeled_blobs(input, wid, het, dep);
+		ArrayList <ArrayList <int []>> mylist = find_labeled_blobs(input, wid, het, dep);
 		
 		boolean had_new=true;
 		while (had_new)
@@ -127,12 +216,12 @@ public class Utility3D  {
 				for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
 				{
 					int [] current_point=(int [])jF.next();
-					if (check_neighbor(current_point[0]+1, current_point[1], current_point[2],i)) ctr++;
-					if (check_neighbor(current_point[0]-1, current_point[1], current_point[2],i)) ctr++;
-					if (check_neighbor(current_point[0], current_point[1]+1, current_point[2],i)) ctr++;
-					if (check_neighbor(current_point[0], current_point[1]-1, current_point[2],i)) ctr++;
-					if (check_neighbor(current_point[0], current_point[1], current_point[2]+1,i)) ctr++;
-					if (check_neighbor(current_point[0], current_point[1], current_point[2]-1,i)) ctr++;
+					if (check_neighbor_grow(current_point[0]+1, current_point[1], current_point[2],i)) ctr++;
+					if (check_neighbor_grow(current_point[0]-1, current_point[1], current_point[2],i)) ctr++;
+					if (check_neighbor_grow(current_point[0], current_point[1]+1, current_point[2],i)) ctr++;
+					if (check_neighbor_grow(current_point[0], current_point[1]-1, current_point[2],i)) ctr++;
+					if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]+1,i)) ctr++;
+					if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]-1,i)) ctr++;
 				}
 				mylist.get(i).clear();
 				mylist.get(i).addAll(current_list);
@@ -145,7 +234,40 @@ public class Utility3D  {
 		}	
 	}
 	
-	boolean check_neighbor(int x, int y, int z, int idx)
+	public void dilate_no_merge(short [] input, int wid, int het, int dep)
+	{
+		width=wid;
+		height=het;
+		depth=dep;
+		int max=0;
+		pixel_array =input; 
+		
+		ArrayList <ArrayList <int []>> mylist = find_labeled_blobs(input, wid, het, dep);
+		
+		boolean had_new=true;
+		for (int i=0; i<max; i++)
+		{
+			current_list=new ArrayList<int []>();
+			for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
+			{
+				int [] current_point=(int [])jF.next();
+				if (check_neighbor_grow(current_point[0]+1, current_point[1], current_point[2],i)) ;
+				if (check_neighbor_grow(current_point[0]-1, current_point[1], current_point[2],i)) ;
+				if (check_neighbor_grow(current_point[0], current_point[1]+1, current_point[2],i)) ;
+				if (check_neighbor_grow(current_point[0], current_point[1]-1, current_point[2],i)) ;
+				if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]+1,i)) ;
+				if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]-1,i)) ;
+			}
+			mylist.get(i).clear();
+			mylist.get(i).addAll(current_list);
+		}
+		for (int i=0; i<width*height*depth; i++) 
+		{
+			if (input[i]==(short)-1) input[i]=(short)0;
+		}	
+	}
+	
+	private boolean check_neighbor_grow(int x, int y, int z, int idx)
 	{
 		if (x<0||x==width||y<0||y==height||z<0||z==depth) return false;
 		if (pixel_array[x+y*width+z*height*width]==idx+1) return false;
@@ -160,7 +282,7 @@ public class Utility3D  {
 		current_list.add(tmp);
 		return true;
 	}
-	public static ImagePlus array_to_ip(short [] pix, int width, int height, int depth)
+	public static ImagePlus imgarray_to_ip(short [] pix, int width, int height, int depth)
 	{
 		ImagePlus new_img=NewImage.createShortImage("MyImg", width, height, depth, NewImage.FILL_BLACK);
 		for (int i=0; i<depth; i++)
@@ -171,7 +293,7 @@ public class Utility3D  {
 		return new_img;
 		
 	}
-	public static short [] ip_to_array(ImagePlus img)
+	public static short [] ip_to_imgarray(ImagePlus img)
 	{
 		short [] pix=new short[img.getWidth()* img.getHeight()* img.getNSlices()];
 		int cur_channel=img.getChannel()-1, cur_frame=img.getFrame()-1;
@@ -182,5 +304,17 @@ public class Utility3D  {
 		}
 		return pix;
 	}
-	
+	public short [] blobarray_to_imgarray(ArrayList <ArrayList <int []>> mylist, int width, int height, int slices)
+	{
+		short [] rtn=new short [width*height*slices];
+		for (int i=0; i<mylist.size(); i++)
+		{
+			for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
+			{
+				int [] current_point=(int [])jF.next();
+				rtn[current_point[0]+current_point[1]*width+current_point[2]*width*height]=(short)(i+1);
+			}
+		}
+		return rtn;		
+	}
 }
