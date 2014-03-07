@@ -21,6 +21,7 @@
 <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <imagej.app.directory>C:\Fiji.app</imagej.app.directory>
+    <imagej1.version>1.48r</imagej1.version>
     <delete.other.versions>true</delete.other.versions>
   </properties>
 	<dependencies>
