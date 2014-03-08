@@ -80,7 +80,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 		gd.addNumericField("Percentile_Max :  ", 90, 1);
 		gd.addNumericField("Percentile_Min :  ", 10, 1);
 		gd.addNumericField("Max :  ", 255, 0);
-		gd.addNumericField("Min:  ", 255, 0);
+		gd.addNumericField("Min:  ", 0, 0);
 		gd.showDialog();
 		double sample=1.0/gd.getNextNumber();
 		double pmax=gd.getNextNumber();
