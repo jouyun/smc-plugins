@@ -80,9 +80,15 @@ public class Utility3D  {
 	ArrayList <int []> current_new_list;
 	ArrayList <int []> new_new_list;
 	
-	//This takes an already indexed short image and provides the ArrayList associated with it, it will create
-	//an entry all the way up to the max value in input, many of which might be blank
-	//NOTE:  Index 0 will have things that were labeled 1 in the input image
+	/*****************************************************************************
+	 * find_labeled_blobs
+	 * @param input:  image array with blob pixels labeled with integers>1
+	 * @param w
+	 * @param h
+	 * @param d
+	 * @return:  An array list of an array list of the points associated with each blob
+	 * Index i of array list corresponds to points that were value i+1 in input
+	 */
 	public static ArrayList <ArrayList <int []>> find_labeled_blobs(short [] input, int w, int h, int d)
 	{
 		short max=0;
@@ -113,7 +119,14 @@ public class Utility3D  {
 		}
 		return rtnlist;
 	}
-	//This takes a (simply thresholded, but converted to short) image and creates the ArrayList for it
+	/***********************************************************************************8
+	 * find_blobs
+	 * @param pix:  binary image (converted to 16bit) of blobs
+	 * @param w
+	 * @param h
+	 * @param d
+	 * @return:  An array list of an array list of the ponits associated with each blob
+	 */
 	public ArrayList <ArrayList <int []>> find_blobs(short [] pix, int w, int h, int d)
 	{
 		width=w;
@@ -124,7 +137,6 @@ public class Utility3D  {
 		current_new_list=new ArrayList<int []>();
 		new_new_list=new ArrayList<int []>();
 		current_list=new ArrayList<int []>();
-		IJ.log(""+pix.length);
 		for (int k=0; k<depth; k++)
 		{
 			for (int i=0; i<width; i++)
@@ -182,21 +194,11 @@ public class Utility3D  {
 		}
 		return rtnlist;
 	}
-	//This is the check neighbor for finding the extent of the blobs, it is NOT to be used for growing
-	boolean check_neighbor(int x, int y, int z)
-	{
-		if (x<0||x==width||y<0||y==height||z<0||z==depth) return false;
-		if (status_array[x+y*width+z*height*width]==0) return false;
-		int [] tmp=new int [3];
-		tmp[0]=x;
-		tmp[1]=y;
-		tmp[2]=z;
-		new_new_list.add(tmp);
-		current_list.add(tmp);
-		status_array[x+y*width+z*width*height]=0;
-		return true;
-	}
 	public void grow_until_neighbor (short [] input, int wid, int het, int dep)
+	{
+		grow_until_neighbor(input, wid, het, dep, -1 );
+	}
+	public void grow_until_neighbor (short [] input, int wid, int het, int dep,int max_size)
 	{
 		width=wid;
 		height=het;
@@ -205,13 +207,16 @@ public class Utility3D  {
 		pixel_array =input; 
 		
 		ArrayList <ArrayList <int []>> mylist = find_labeled_blobs(input, wid, het, dep);
-		
+		max=mylist.size();
+		int [] point_count=new int [max];
 		boolean had_new=true;
 		while (had_new)
 		{
 			int ctr=0;
 			for (int i=0; i<max; i++)
 			{
+				point_count[i]+=mylist.get(i).size();
+				if (point_count[i]>max_size&&max_size>0) continue;
 				current_list=new ArrayList<int []>();
 				for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
 				{
@@ -226,6 +231,7 @@ public class Utility3D  {
 				mylist.get(i).clear();
 				mylist.get(i).addAll(current_list);
 			}
+			IJ.log(""+ctr);
 			if (ctr==0) had_new=false;
 		}
 		for (int i=0; i<width*height*depth; i++) 
@@ -261,27 +267,15 @@ public class Utility3D  {
 			mylist.get(i).clear();
 			mylist.get(i).addAll(current_list);
 		}
-		for (int i=0; i<width*height*depth; i++) 
+	}
+	public void clean_fences(short [] input, int w, int h, int d)
+	{
+		for (int i=0; i<w*h*d; i++) 
 		{
 			if (input[i]==(short)-1) input[i]=(short)0;
 		}	
 	}
 	
-	private boolean check_neighbor_grow(int x, int y, int z, int idx)
-	{
-		if (x<0||x==width||y<0||y==height||z<0||z==depth) return false;
-		if (pixel_array[x+y*width+z*height*width]==idx+1) return false;
-		if (pixel_array[x+y*width+z*height*width]>0)  //Crashed into neighbor! 
-		{
-			pixel_array[x+y*width+z*height*width]=(short)-1;
-			return false;
-		}
-		if (pixel_array[x+y*width+z*height*width]<0) return false;
-		pixel_array[x+y*width+z*height*width]=(short)(idx+1);
-		int [] tmp={x,y,z};
-		current_list.add(tmp);
-		return true;
-	}
 	public static ImagePlus imgarray_to_ip(short [] pix, int width, int height, int depth)
 	{
 		ImagePlus new_img=NewImage.createShortImage("MyImg", width, height, depth, NewImage.FILL_BLACK);
@@ -304,17 +298,54 @@ public class Utility3D  {
 		}
 		return pix;
 	}
-	public short [] blobarray_to_imgarray(ArrayList <ArrayList <int []>> mylist, int width, int height, int slices)
+	public static short [] blobarray_to_imgarray(ArrayList <ArrayList <int []>> mylist, int w, int h, int s)
 	{
-		short [] rtn=new short [width*height*slices];
+		short [] rtn=new short [w*h*s];
 		for (int i=0; i<mylist.size(); i++)
 		{
 			for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
 			{
 				int [] current_point=(int [])jF.next();
-				rtn[current_point[0]+current_point[1]*width+current_point[2]*width*height]=(short)(i+1);
+				rtn[current_point[0]+current_point[1]*w+current_point[2]*w*h]=(short)(i+1);
 			}
 		}
 		return rtn;		
+	}
+	
+	private boolean check_neighbor_grow(int x, int y, int z, int idx)
+	{
+		if (x<0||x==width||y<0||y==height||z<0||z==depth) return false;
+		if (pixel_array[x+y*width+z*height*width]==idx+1) return false;
+		if (pixel_array[x+y*width+z*height*width]>0)  //Crashed into neighbor! 
+		{
+			pixel_array[x+y*width+z*height*width]=(short)-1;
+			return false;
+		}
+		if (pixel_array[x+y*width+z*height*width]<0) return false;
+		pixel_array[x+y*width+z*height*width]=(short)(idx+1);
+		int [] tmp={x,y,z};
+		current_list.add(tmp);
+		return true;
+	}
+	
+	/************************************************************************************
+	 * check_neighbor
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @return true if could add point to the list of current object, to be used with find_blobs only
+	 */
+	private boolean check_neighbor(int x, int y, int z)
+	{
+		if (x<0||x==width||y<0||y==height||z<0||z==depth) return false;
+		if (status_array[x+y*width+z*height*width]==0) return false;
+		int [] tmp=new int [3];
+		tmp[0]=x;
+		tmp[1]=y;
+		tmp[2]=z;
+		new_new_list.add(tmp);
+		current_list.add(tmp);
+		status_array[x+y*width+z*width*height]=0;
+		return true;
 	}
 }
