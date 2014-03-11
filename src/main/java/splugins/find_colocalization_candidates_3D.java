@@ -73,7 +73,7 @@ public class find_colocalization_candidates_3D implements PlugIn {
 	@Override
 	public void run(String arg) {
 		int lateral_half=20;
-		int z_clip=3;
+		int z_clip=5;
 		
 		ImagePlus img;
 		img=WindowManager.getCurrentImage();
@@ -155,6 +155,7 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			tmp_pt[2]=(int)the_table.getValue("Z", i);
 			for (int current_z=0; current_z<z_clip; current_z++)
 			{
+				if (current_z+tmp_pt[2]>=depth) continue;
 				//Copy first channel
 				float [] new_pix=(float []) new_img.getStack().getProcessor((i*z_clip+current_z)*2+1).getPixels();
 				float [] old_pix=(float []) img.getStack().getProcessor(2*(tmp_pt[2]+current_z)+1).getPixels();
