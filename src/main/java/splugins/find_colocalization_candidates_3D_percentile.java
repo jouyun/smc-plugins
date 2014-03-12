@@ -144,7 +144,6 @@ public class find_colocalization_candidates_3D_percentile implements PlugIn {
 			//Throw out ones too small
 			if (current_list.size()<minimum_size) continue;
 			double [] averages=new double[img.getNChannels()];
-			number_big_enough++;
 			//Tabulate statistics
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
