@@ -87,6 +87,12 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 		double pmin=gd.getNextNumber();
 		double max=gd.getNextNumber();
 		double min=gd.getNextNumber();
+		Normalize(img, sample, pmax, pmin, max, min);
+		img.updateAndDraw();
+	}
+	public static void Normalize(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
+	{
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
 		for (int f=0; f<frames; f++)
 		{
 			for (int c=0; c<channels; c++)
@@ -116,8 +122,53 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 				}
 			}
 		}
-		img.updateAndDraw();
-
+		
+	}
+	/*******************************************************************************************
+	 * 					NormalizeByte, normalizes a byte image
+	 * @param img Image to normalize
+	 * @param sample 1.0/X where X is sampling after every X pixels for determining percentiles
+	 * @param pmax The upper percentile (usually 90)
+	 * @param pmin The lower percentile (usually 10)
+	 * @param max What final pixel value will correspond to the upper percentile
+	 * @param min What final pixel value will correspond to the lower percentile
+	 */
+	public static void NormalizeByte(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
+	{
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		for (int f=0; f<frames; f++)
+		{
+			for (int c=0; c<channels; c++)
+			{
+				for (int s=0; s<slices; s++)
+				{
+					List <Float> stk=new ArrayList<Float>();
+					float [] pix = (float [])img.getStack().getProcessor(f*slices*channels+s*channels+c+1).convertToFloat().getPixels();
+					for (int i=0; i<pix.length; i++)
+					{
+						if (Math.random()<sample)
+						{
+							stk.add(pix[i]);
+						}
+					}
+					Collections.sort(stk);
+					int pminidx=(int)Math.floor(pmin/100.0*(float)stk.size());
+					int pmaxidx=(int)Math.floor(pmax/100.0*(float)stk.size());
+					float rmin=stk.get(pminidx);
+					float rgap=stk.get(pmaxidx)-stk.get(pminidx);
+					float ngap=(float)(max-min);
+					float rn=rgap/ngap;
+					byte [] byte_pix=(byte [])img.getStack().getProcessor(f*slices*channels+s*channels+c+1).getPixels();
+					for (int i=0; i<pix.length; i++)
+					{
+						float tmp=((pix[i]-rmin)/rn+(float)min);
+						byte_pix[i]=(byte)tmp;
+						if (tmp<0) byte_pix[i]=(byte)0;
+						if (tmp>255) byte_pix[i]=(byte)255;
+					}
+				}
+			}
+		}
 	}
 
 }
