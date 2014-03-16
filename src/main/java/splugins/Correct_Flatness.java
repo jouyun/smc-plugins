@@ -69,8 +69,6 @@ public class Correct_Flatness implements PlugIn {
 	@Override
 	public void run(String arg) {
 		ImagePlus img=WindowManager.getCurrentImage();
-		int width=img.getWidth(), height=img.getHeight(), slices=img.getStackSize();
-		ImagePlus new_img=NewImage.createFloatImage("Result", width, height, slices, NewImage.FILL_BLACK);
 		
 		GenericDialog gd = new GenericDialog("In situ process");
 		gd.addNumericField("XCenter", 628.0, 1);
@@ -83,12 +81,32 @@ public class Correct_Flatness implements PlugIn {
 		{
 			return;
 		}				
-		float gaussian[][]=new float[width][height];
+		
 		float xcenter=(float)gd.getNextNumber();
 		float ycenter=(float)gd.getNextNumber();
 		float xwidth=(float)gd.getNextNumber();
 		float ywidth=(float)gd.getNextNumber();
 		float background=(float)gd.getNextNumber();
+		
+		ImagePlus new_img=DoCorrect(img, xcenter, ycenter, xwidth, ywidth, background);
+		new_img.show();
+		new_img.updateAndDraw();
+	}
+	/******************************************************************************
+	 * DoCorrect- For compensating for a non-flat illumination field, assumes Gaussian
+	 * @param img ImagePlus object to be corrected (must be float)
+	 * @param xcenter Center of Gaussian in X
+	 * @param ycenter Center of Gaussian in Y
+	 * @param xwidth Width of Gaussian in X direction (pixels)
+	 * @param ywidth Width of Gaussian in Y direction (pixels)
+	 * @param background The background of detector when totally dark
+	 * @return New ImagePlus object containing corrected image
+	 */
+	public static ImagePlus DoCorrect(ImagePlus img, float xcenter, float ycenter, float xwidth, float ywidth, float background)
+	{
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getStackSize();
+		ImagePlus new_img=NewImage.createFloatImage("Result", width, height, slices, NewImage.FILL_BLACK);
+		float gaussian[][]=new float[width][height];
 		for (int i=0; i<width; i++)
 		{
 			for (int j=0; j<height; j++)
@@ -112,7 +130,6 @@ public class Correct_Flatness implements PlugIn {
 				}
 			}
 		}
-		new_img.show();
-		new_img.updateAndDraw();
+		return new_img;
 	}
 }

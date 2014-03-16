@@ -82,7 +82,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 		gd.addNumericField("MyMax:  ", 255, 0);
 		gd.addNumericField("MyMin: ", 0, 0);
 		gd.showDialog();
-		double sample=1.0/gd.getNextNumber();
+		double sample=gd.getNextNumber();
 		double pmax=gd.getNextNumber();
 		double pmin=gd.getNextNumber();
 		double max=gd.getNextNumber();
@@ -93,6 +93,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	public static void Normalize(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
 	{
 		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		sample=1.0/sample;
 		for (int f=0; f<frames; f++)
 		{
 			for (int c=0; c<channels; c++)
@@ -127,7 +128,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	/*******************************************************************************************
 	 * 					NormalizeByte, normalizes a byte image
 	 * @param img Image to normalize
-	 * @param sample 1.0/X where X is sampling after every X pixels for determining percentiles
+	 * @param sample Sample image every "sample" pixels (sorting a whole image takes a while)
 	 * @param pmax The upper percentile (usually 90)
 	 * @param pmin The lower percentile (usually 10)
 	 * @param max What final pixel value will correspond to the upper percentile
@@ -136,6 +137,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	public static void NormalizeByte(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
 	{
 		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		sample=1.0/sample;
 		for (int f=0; f<frames; f++)
 		{
 			for (int c=0; c<channels; c++)

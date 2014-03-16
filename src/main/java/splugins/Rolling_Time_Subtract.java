@@ -69,13 +69,27 @@ public class Rolling_Time_Subtract implements PlugIn {
 	@Override
 	public void run(String arg) {
 		ImagePlus img=WindowManager.getCurrentImage();
-		int width=img.getWidth(), height=img.getHeight(), slices=img.getStackSize();
 		GenericDialog gd = new GenericDialog("Title");
 		
 		gd.addNumericField("How big of a window:  ", 5, 1);
 		gd.showDialog();
 		
 		int window =(int)gd.getNextNumber(); 
+		
+		ImagePlus new_img=DoSubtract(img, window);
+		
+		new_img.updateAndDraw();
+		new_img.show();
+	}
+	/**********************************************************************
+	 * DoSubtract- Subtracts a box car average of time series
+	 * @param img Must be float
+	 * @param window 
+	 * @return ImagePlus of subtraction, first "window" frames will be unaltered
+	 */
+	public static ImagePlus DoSubtract(ImagePlus img, int window)
+	{
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getStackSize();
 		
 		ImagePlus new_img=NewImage.createFloatImage("Result", width, height, slices, NewImage.FILL_BLACK);
 		//Find average, put in new_img
@@ -96,10 +110,7 @@ public class Rolling_Time_Subtract implements PlugIn {
 			float [] old_pix=(float [])img.getStack().getPixels(i);
 			for (int k=0; k<width*height; k++) new_pix[k]= ((float)old_pix[k]-new_pix[k]);
 		}
-		
-		new_img.updateAndDraw();
-		new_img.show();
-
+		return new_img;
 	}
 
 }
