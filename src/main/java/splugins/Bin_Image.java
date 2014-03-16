@@ -53,6 +53,12 @@ public class Bin_Image implements PlugIn {
 	@Override
 	public void run(String arg) {
 		ImagePlus imp=WindowManager.getCurrentImage();
+		ImagePlus newimg=DoBin(imp);
+		newimg.show();
+		newimg.updateAndDraw();
+	}
+	public static ImagePlus DoBin(ImagePlus imp)
+	{
 		int width=imp.getWidth(), height=imp.getHeight(), slices=imp.getStackSize();
 		ImagePlus newimg=new ImagePlus("Binned", ImageStack.create(width/2, height/2, slices,32));
 		for (int i=0; i<slices; i++)
@@ -72,8 +78,7 @@ public class Bin_Image implements PlugIn {
 				}
 			}
 		}
-		newimg.show();
-		newimg.updateAndDraw();
+		return newimg;
 	}
 
 }
