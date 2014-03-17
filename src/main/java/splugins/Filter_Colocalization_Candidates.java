@@ -37,7 +37,7 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         	if (myimg.getFrame()<myimg.getNFrames()) myimg.setT(myimg.getFrame()+1);
         	//win.getImagePlus().setSlice(win.getImagePlus().getSlice()+1);
         }
-        if (keyChar=='a')
+        if (keyChar=='s')
         {
         	if (myimg.getFrame()>1) myimg.setT(myimg.getFrame()-1);
         	//win.getImagePlus().setSlice(win.getImagePlus().getSlice()-1);
@@ -65,7 +65,7 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         	myimg.updateAndDraw();
         	hit_list[myimg.getFrame()-1]=!hit_list[myimg.getFrame()-1];
         }
-        if (keyChar=='s'&&!s_down)
+        if (keyChar=='a'&&!s_down)
         {
         	double min, max;
         	min=myimg.getDisplayRangeMin();
@@ -74,7 +74,7 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         	myimg.updateAndDraw();
         	//s_down=true;
         }
-        if (keyChar=='x')
+        if (keyChar=='z')
         {
         	double min, max;
         	min=myimg.getDisplayRangeMin();
