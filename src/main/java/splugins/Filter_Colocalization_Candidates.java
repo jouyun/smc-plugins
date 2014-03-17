@@ -177,7 +177,6 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
 	       String message;
 	       
 	       int notches = e.getWheelRotation();
-	       IJ.log("Notches:  "+notches);
 	       if (notches < 0) {
 	    	   
 	    	   if (myimg.getFrame()>1) myimg.setT(myimg.getFrame()-1);
