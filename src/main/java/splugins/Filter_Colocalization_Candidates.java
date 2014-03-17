@@ -11,8 +11,10 @@ import ij.plugin.PlugIn;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
-public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, ImageListener {
+public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, ImageListener, MouseWheelListener {
 
 	ImageWindow win;
     ImageCanvas canvas;
@@ -25,6 +27,7 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
     int width;
     boolean [] hit_list;
     boolean s_down;
+    boolean just_went;
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int keyCode = e.getKeyCode();
@@ -32,14 +35,47 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         int flags = e.getModifiers();
         //IJ.log("keyPressed: keyCode=" + keyCode + " (" + KeyEvent.getKeyText(keyCode) + ")");
         //IJ.log("char: "+keyChar);
-        if (keyChar=='f') 
+        if (keyChar=='e') 
         {
         	if (myimg.getFrame()<myimg.getNFrames()) myimg.setT(myimg.getFrame()+1);
+        	/*float pix[]=(float [])myimg.getProcessor().getPixels();
+        	float pix2[]=(float [])myimg.getStack().getProcessor(myimg.getSlice()+1).getPixels();
+        	float max=0, min=1000000;
+        	float max2=0, min2=1000000;
+        	for (int i=0; i<pix.length; i++)
+        	{
+        		if (pix[i]>max) max=pix[i];
+        		if (pix[i]<min) min=pix[i];
+        		if (pix2[i]>max2) max2=pix2[i];
+        		if (pix2[i]<min2) min2=pix2[i];
+        	}
+        	myimg.setC(2);
+        	myimg.setDisplayRange(min2, min2+(max2-min2)/.00000000001);
+        	myimg.setC(1);
+        	myimg.setDisplayRange(min, min+(max-min)/.5);
+        	myimg.updateAndDraw();*/
+        	
         	//win.getImagePlus().setSlice(win.getImagePlus().getSlice()+1);
         }
-        if (keyChar=='s')
+        if (keyChar=='r')
         {
         	if (myimg.getFrame()>1) myimg.setT(myimg.getFrame()-1);
+        	/*float pix[]=(float [])myimg.getProcessor().getPixels();
+        	float pix2[]=(float [])myimg.getStack().getProcessor(myimg.getSlice()+1).getPixels();
+        	float max=0, min=1000000;
+        	float max2=0, min2=1000000;
+        	for (int i=0; i<pix.length; i++)
+        	{
+        		if (pix[i]>max) max=pix[i];
+        		if (pix[i]<min) min=pix[i];
+        		if (pix2[i]>max2) max2=pix2[i];
+        		if (pix2[i]<min2) min2=pix2[i];
+        	}
+        	myimg.setC(2);
+        	myimg.setDisplayRange(min2, min2+(max2-min2)/1.0);
+        	myimg.setC(1);
+        	myimg.setDisplayRange(min, min+(max-min)/1.0);
+        	myimg.updateAndDraw();*/
         	//win.getImagePlus().setSlice(win.getImagePlus().getSlice()-1);
         }
         if (keyChar=='p')
@@ -65,22 +101,43 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         	myimg.updateAndDraw();
         	hit_list[myimg.getFrame()-1]=!hit_list[myimg.getFrame()-1];
         }
-        if (keyChar=='a'&&!s_down)
+        if (keyChar=='f'&&!s_down)
         {
+        	double min, max;
+        	min=myimg.getDisplayRangeMin();
+        	max=myimg.getDisplayRangeMax();
+        	myimg.setDisplayRange(min, min+(max-min)/1.5);
+        	myimg.updateAndDraw();
+        	//s_down=true;
+        }
+        if (keyChar=='a')
+        {
+        	double min, max;
+        	min=myimg.getDisplayRangeMin();
+        	max=myimg.getDisplayRangeMax();
+        	myimg.setDisplayRange(min, min+(max-min)*1.5);
+        	myimg.updateAndDraw();
+        }
+        if (keyChar=='e'&&!s_down)
+        {
+        	myimg.setC(2);
         	double min, max;
         	min=myimg.getDisplayRangeMin();
         	max=myimg.getDisplayRangeMax();
         	myimg.setDisplayRange(min, min+(max-min)/2.0);
         	myimg.updateAndDraw();
+        	myimg.setC(1);
         	//s_down=true;
         }
-        if (keyChar=='z')
+        if (keyChar=='c')
         {
+        	myimg.setC(2);
         	double min, max;
         	min=myimg.getDisplayRangeMin();
         	max=myimg.getDisplayRangeMax();
         	myimg.setDisplayRange(min, min+(max-min)*2.0);
         	myimg.updateAndDraw();
+        	myimg.setC(1);
         }
         if (keyChar=='q')
         {
@@ -109,6 +166,39 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         }
 
 	}
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		myimg.setC(1);
+			if (just_went)
+			{
+				just_went=false;
+				return;
+			}
+			just_went=true;
+	       String message;
+	       
+	       int notches = e.getWheelRotation();
+	       IJ.log("Notches:  "+notches);
+	       if (notches < 0) {
+	    	   
+	    	   if (myimg.getFrame()>1) myimg.setT(myimg.getFrame()-1);
+	    	   
+	    	   /*double min, max;
+	        	min=myimg.getDisplayRangeMin();
+	        	max=myimg.getDisplayRangeMax();
+	        	myimg.setDisplayRange(min, min+(max-min)/1.5);
+	        	myimg.updateAndDraw();*/
+	        	
+	       } else {
+	    	   if (myimg.getFrame()<myimg.getNFrames()) myimg.setT(myimg.getFrame()+1);
+	    	   /*
+	    	   double min, max;
+	        	min=myimg.getDisplayRangeMin();
+	        	max=myimg.getDisplayRangeMax();
+	        	myimg.setDisplayRange(min, min+(max-min)*1.5);
+	        	myimg.updateAndDraw();*/
+	       }
+	       
+	    }
 
 	@Override
 	public void keyReleased(KeyEvent e) {
@@ -144,6 +234,8 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
         canvas.removeKeyListener(IJ.getInstance());
         win.addKeyListener(this);
         canvas.addKeyListener(this);
+        win.addMouseWheelListener(this);
+        canvas.addMouseWheelListener(this);
         //ImagePlus.addImageListener(this);
         counts=0;
         hit_list=new boolean[myimg.getNFrames()];
@@ -163,9 +255,18 @@ public class Filter_Colocalization_Candidates implements PlugIn, KeyListener, Im
 	public void cleanup()
 	{
 		if (win!=null)
-            win.removeKeyListener(this);
+		{
+			win.removeKeyListener(this);
+			win.removeMouseWheelListener(this);
+		}
+		
         if (canvas!=null)
-            canvas.removeKeyListener(this);
+        {
+        	canvas.removeKeyListener(this);
+        	canvas.removeMouseWheelListener(this);
+        }
+        
+        
         //ImagePlus.removeImageListener(this);
 	}
 	
