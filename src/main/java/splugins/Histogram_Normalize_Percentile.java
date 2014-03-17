@@ -90,6 +90,15 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 		Normalize(img, sample, pmax, pmin, max, min);
 		img.updateAndDraw();
 	}
+	/*******************************************************************************************
+	 * 					Normalize, normalizes a image based on percentiles
+	 * @param img Image to normalize (must be float)
+	 * @param sample Sample image every "sample" pixels (sorting a whole image takes a while)
+	 * @param pmax The upper percentile (usually 90)
+	 * @param pmin The lower percentile (usually 10)
+	 * @param max What final pixel value will correspond to the upper percentile
+	 * @param min What final pixel value will correspond to the lower percentile
+	 */
 	public static void Normalize(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
 	{
 		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
@@ -127,7 +136,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	}
 	/*******************************************************************************************
 	 * 					NormalizeByte, normalizes a byte image
-	 * @param img Image to normalize
+	 * @param img Image to normalize, must be byte image
 	 * @param sample Sample image every "sample" pixels (sorting a whole image takes a while)
 	 * @param pmax The upper percentile (usually 90)
 	 * @param pmin The lower percentile (usually 10)
