@@ -194,7 +194,7 @@ public class find_colocalization_candidates_3D_percentile implements PlugIn {
 				{
 					for (int k=-lateral_half; k<lateral_half; k++)
 					{
-						new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
+						if (tmp_pt[1]+k<height&&tmp_pt[1]+k>0&&tmp_pt[0]+j<width&&tmp_pt[0]+j>0) new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
 					}
 				}
 				//Copy segmented channel
@@ -204,7 +204,7 @@ public class find_colocalization_candidates_3D_percentile implements PlugIn {
 				{
 					for (int k=-lateral_half; k<lateral_half; k++)
 					{
-						new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
+						if (tmp_pt[1]+k<height&&tmp_pt[1]+k>0&&tmp_pt[0]+j<width&&tmp_pt[0]+j>0) new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
 					}
 				}
 			}
