@@ -21,15 +21,14 @@ public class bad_plugin implements PlugIn {
 		{
 			if (!file_list[i].endsWith(".tif")) continue;
 			ImagePlus myimg=IJ.openImage(dc.getDirectory()+file_list[i]);
-			//Histogram_Normalize_Percentile.NormalizeByte(myimg, 10.0, 90, 10, 220, 120);
-			byte [] pix=(byte [])myimg.getProcessor().getPixels();
-			int max=0, min=2000;
+			//Histogram_Normalize_Percentile.Normalize(myimg, 10.0, 90, 10, 220, 120);
+			float [] pix=(float [])myimg.getProcessor().getPixels();
+			float max=0, min=2000;
 			for (int j=0; j<pix.length; j++) 
 			{
-				int tmp=pix[j]&0xff;
-				if (tmp<min) min=tmp;
-				if (tmp>max) max=tmp;
-				pix[j]=(byte) (pix[j]/(byte)2);
+				if (pix[j]<min) min=pix[j];
+				if (pix[j]>max) max=pix[j];
+				pix[j]=pix[j]+100*(float)Math.random();
 			}
 			results.incrementCounter();
 			results.addValue("File", file_list[i]);
