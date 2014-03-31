@@ -69,7 +69,7 @@ public class Percentile_Threshold implements PlugIn{
 	{
 		double prctile=0.995;
 		ImagePlus imp=WindowManager.getCurrentImage();
-		double width=imp.getWidth(), height=imp.getHeight();
+		int width=imp.getWidth(), height=imp.getHeight();
 		
 		
 		GenericDialog gd = new GenericDialog("In situ process");
@@ -84,9 +84,18 @@ public class Percentile_Threshold implements PlugIn{
 		prctile=(float)gd.getNextNumber();
 		float SNR=(float)gd.getNextNumber();
 		
+		byte [] new_array=get_mask((float []) imp.getProcessor().getPixels(), width, height, (float)prctile, SNR);
 		
+		ImagePlus new_img=new ImagePlus("Result", new ByteProcessor(width, height, new_array));
+		
+		new_img.show();
+		new_img.updateAndDraw();
+	}
+	
+	static byte [] get_mask(float [] pix, int width, int height, float prctile, float SNR)
+	{
 		List <Float> stk=new ArrayList<Float>();
-		float [] pix=(float []) imp.getProcessor().getPixels();
+		
 		Random rand=new Random();
 		int frac_to_include=10;
 		for (int i=0; i<width*height; i++)
@@ -107,9 +116,10 @@ public class Percentile_Threshold implements PlugIn{
 		}
 		average=average/(double)(num_pix);
 		sigma=(double)Math.sqrt(sigma/(double)(num_pix)-average*average);
-		ImagePlus new_img=NewImage.createByteImage("Result", (int)width, (int)height, 1, NewImage.FILL_BLACK);
+		//ImagePlus new_img=NewImage.createByteImage("Result", (int)width, (int)height, 1, NewImage.FILL_BLACK);
 		
-		byte [] new_pix=(byte [])new_img.getProcessor().getPixels();
+		//byte [] new_pix=(byte [])new_img.getProcessor().getPixels();
+		byte [] new_pix= new byte [width*height];
 		
 		float thresh=stk.get((int)(stk.size()*prctile/100));
 		IJ.log("Threshold:  "+sigma);
@@ -120,9 +130,7 @@ public class Percentile_Threshold implements PlugIn{
 			if ((double)pix[i]-average<sigma*(double)SNR) continue;
 			new_pix[i]=(byte)255;
 		}
-		
-		new_img.show();
-		new_img.updateAndDraw();
+		return new_pix;
 	}
 	
 }

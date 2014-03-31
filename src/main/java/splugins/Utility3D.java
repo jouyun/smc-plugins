@@ -119,6 +119,29 @@ public class Utility3D  {
 		}
 		return rtnlist;
 	}
+	
+	public static void filter_blob_array(ArrayList <ArrayList <int []>> inp, int min, int max)
+	{
+		for (int i=0; i<inp.size(); i++)
+		{
+			if (inp.get(i).size()<min||inp.get(i).size()>max) 
+			{
+				inp.remove(i);
+				i--;
+			}
+		}
+	}
+	public static int [] find_center_of_mass(ArrayList <int []> myblob)
+	{
+		int [] rtn=new int [3];
+		for (ListIterator jF=myblob.listIterator(); jF.hasNext();)
+		{
+			int [] current_point=(int [])jF.next();
+			for (int i=0; i<3; i++) rtn[i]=rtn[i]+current_point[i];
+		}
+		for (int i=0; i<3; i++) rtn[i]=rtn[i]/myblob.size();
+		return rtn;
+	}
 	/***********************************************************************************8
 	 * find_blobs
 	 * @param pix:  binary image (converted to 16bit) of blobs
@@ -307,6 +330,20 @@ public class Utility3D  {
 			{
 				int [] current_point=(int [])jF.next();
 				rtn[current_point[0]+current_point[1]*w+current_point[2]*w*h]=(short)(i+1);
+			}
+		}
+		return rtn;		
+	}
+	
+	public byte [] blobarray_to_byte_imgarray(ArrayList <ArrayList <int []>> mylist, int w, int h, int s)
+	{
+		byte [] rtn=new byte [w*h*s];
+		for (int i=0; i<mylist.size(); i++)
+		{
+			for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
+			{
+				int [] current_point=(int [])jF.next();
+				rtn[current_point[0]+current_point[1]*w+current_point[2]*w*h]=(byte)255;
 			}
 		}
 		return rtn;		
