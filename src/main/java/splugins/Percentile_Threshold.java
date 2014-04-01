@@ -122,8 +122,8 @@ public class Percentile_Threshold implements PlugIn{
 		byte [] new_pix= new byte [width*height];
 		
 		float thresh=stk.get((int)(stk.size()*prctile/100));
-		IJ.log("Threshold:  "+sigma);
-		IJ.log("SNR*Threshold:  " +(sigma*SNR));
+		//IJ.log("Threshold:  "+sigma);
+		//IJ.log("SNR*Threshold:  " +(sigma*SNR));
 		
 		for (int i=0; i<width*height; i++)
 		{
