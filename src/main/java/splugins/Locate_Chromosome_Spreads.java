@@ -16,7 +16,7 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 
 	@Override
 	public void run(String arg0) {
-		float pixel_size=0.645f;
+		float pixel_size=0.5463f;
 		
 		//For now just process open image
 		ImagePlus img=WindowManager.getCurrentImage();
@@ -73,8 +73,8 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 			int [] rtn=Utility3D.find_center_of_mass(current_blob);
 			IJ.log("X: "+rtn[0]+ " Y: "+rtn[1]);
 			double X=(rtn[0]-width/2)*pixel_size, Y=(rtn[1]-height/2)*pixel_size;
-			rslt.addValue("X", X+Xinit);
-			rslt.addValue("Y", Y+Yinit);
+			rslt.addValue("X", Xinit-X);
+			rslt.addValue("Y", Yinit+Y);
 		}
 		rslt.show("Results");
 	}
