@@ -50,9 +50,13 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 		int Yidx=info.indexOf("YPositionUm")+14;
 		int Xend=Xidx+1+info.substring(Xidx+1, info.length()).indexOf(",");
 		int Yend=Yidx+1+info.substring(Yidx+1, info.length()).indexOf(",");
+		int Zidx=info.indexOf("ZPositionUm")+14;
+		int Zend=Zidx+1+info.substring(Zidx+1, info.length()).indexOf("}");
+		
 		
 		float Xinit=Float.parseFloat(info.substring(Xidx,  Xend-1));
 		float Yinit=Float.parseFloat(info.substring(Yidx, Yend-1));
+		float Zinit=Float.parseFloat(info.substring(Zidx, Zend-1));
 		
 		//IJ.log("X base: "+Xinit+" Y base: "+Yinit);
 		
@@ -97,6 +101,7 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 			double X=(rtn[0]-width/2)*pixel_size, Y=(rtn[1]-height/2)*pixel_size;
 			rslt.addValue("X", Xinit-X);
 			rslt.addValue("Y", Yinit+Y);
+			rslt.addValue("Z", Zinit);
 		}
 		rslt.show("Results");
 	}
