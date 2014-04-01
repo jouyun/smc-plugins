@@ -132,4 +132,91 @@ public class Correct_Flatness implements PlugIn {
 		}
 		return new_img;
 	}
+	/*******************************************************************************************
+	 * DoCorrectUsingSample - For compensating for a non-flat illumination field, averages each channel
+	 * over all frames and slices and divides
+	 * @param img
+	 * @return
+	 */
+	public static ImagePlus DoCorrectUsingSample(ImagePlus img)
+	{
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), frames=img.getNFrames(), channels=img.getNChannels();
+		ImagePlus new_img=NewImage.createFloatImage("Result", width, height, slices*frames*channels, NewImage.FILL_BLACK);
+		
+		//Get projection
+		float [][][] averages=new float[width][height][channels];
+		for (int f=0; f<frames; f++)
+		{
+			for (int s=0; s<slices; s++)
+			{
+				for (int c=0; c<channels; c++)
+				{
+					float [] cpix=(float []) img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					for (int x=0; x<width; x++)
+					{
+						for (int y=0; y<height; y++)
+						{
+							averages[x][y][c]=averages[x][y][c]+cpix[y*width+x];
+						}
+					}
+				}
+			}
+		}
+		
+		//Divide by the count to compute average
+		for (int c=0; c<channels; c++)
+		{
+			for (int x=0; x<width; x++)
+			{
+				for (int y=0; y<height; y++)
+				{
+					averages[x][y][c]=averages[x][y][c]/(float)(frames*slices);
+				}
+			}
+		}
+		
+		//Put in new imageprocessor
+		GaussianBlur myblur = new GaussianBlur();
+		for (int f=0; f<frames; f++)
+		{
+			for (int s=0; s<slices; s++)
+			{
+				for (int c=0; c<channels; c++)
+				{
+					float [] npix=(float []) new_img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					//float [] cpix=(float []) img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					for (int x=0; x<width; x++)
+					{
+						for (int y=0; y<height; y++)
+						{
+							npix[y*width+x]=averages[x][y][c];
+						}
+					}
+					myblur.blurGaussian(new_img.getStack().getProcessor(c+s*channels+f*channels*slices+1), 120, 120, .1);
+				}
+			}
+		}
+		
+		//Divide
+		for (int f=0; f<frames; f++)
+		{
+			for (int s=0; s<slices; s++)
+			{
+				for (int c=0; c<channels; c++)
+				{
+					float [] npix=(float []) new_img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					float [] cpix=(float []) img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					for (int x=0; x<width; x++)
+					{
+						for (int y=0; y<height; y++)
+						{
+							npix[y*width+x]=cpix[y*width+x]/npix[y*width+x];
+						}
+					}
+				}
+			}
+		}
+		
+		return new_img;
+	}
 }
