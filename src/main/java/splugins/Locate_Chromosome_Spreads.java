@@ -18,12 +18,6 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 
 	@Override
 	public void run(String arg0) {
-<<<<<<< HEAD
-		float pixel_size=0.5463f;
-=======
-		
-		
->>>>>>> 703bf7f237a6b2980e32e7b19a17332d1b89da63
 		
 		//For now just process open image
 		//ImagePlus img=WindowManager.getCurrentImage();
@@ -47,7 +41,7 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 	
 	public static void Process_Image(ImagePlus img)
 	{
-		float pixel_size=0.645f;
+		float pixel_size=0.5463f;
 		int width=img.getWidth(), height=img.getHeight();
 		String info=img.getInfoProperty();
 		
