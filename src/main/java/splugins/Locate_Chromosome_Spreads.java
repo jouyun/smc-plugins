@@ -1,11 +1,13 @@
 package splugins;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.io.DirectoryChooser;
 import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import ij.process.ByteProcessor;
@@ -16,10 +18,32 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 
 	@Override
 	public void run(String arg0) {
-		float pixel_size=0.645f;
+		
+		
 		
 		//For now just process open image
-		ImagePlus img=WindowManager.getCurrentImage();
+		//ImagePlus img=WindowManager.getCurrentImage();
+		//Process_Image(img);
+		
+		//For future, process a folder of them
+		DirectoryChooser dc=new DirectoryChooser("Where are files");
+		String base_dir=dc.getDirectory();
+		File base_file=new File(base_dir);
+		String [] my_list=base_file.list();
+		for (int i=0; i<my_list.length; i++)
+		{
+			File tmpfile=new File(base_dir+my_list[i]);
+			if (!tmpfile.isDirectory()) continue;
+			ImagePlus tmpimg=IJ.openImage(base_dir+my_list[i]+File.separator+"img_000000000__000.tif");
+			Process_Image(tmpimg);
+			tmpimg.close();
+		}
+		
+	}
+	
+	public static void Process_Image(ImagePlus img)
+	{
+		float pixel_size=0.645f;
 		int width=img.getWidth(), height=img.getHeight();
 		String info=img.getInfoProperty();
 		
@@ -32,7 +56,7 @@ public class Locate_Chromosome_Spreads implements PlugIn {
 		float Xinit=Float.parseFloat(info.substring(Xidx,  Xend-1));
 		float Yinit=Float.parseFloat(info.substring(Yidx, Yend-1));
 		
-		IJ.log("X base: "+Xinit+" Y base: "+Yinit);
+		//IJ.log("X base: "+Xinit+" Y base: "+Yinit);
 		
 		float [] fpix=new float[width*height];
 		byte [] opix=(byte []) img.getProcessor().getPixels();
