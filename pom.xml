@@ -20,8 +20,8 @@
 	<description>A Maven project implementing an ImageJ 1.x plugin</description>
 <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <imagej.app.directory>C:\Fiji.app</imagej.app.directory>
-    <imagej1.version>1.48s</imagej1.version>
+    <imagej.app.directory>/home/smc/Fiji.app</imagej.app.directory>
+    <imagej1.version>1.48t</imagej1.version>
     <delete.other.versions>true</delete.other.versions>
   </properties>
 	<dependencies>
