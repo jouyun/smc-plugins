@@ -310,10 +310,11 @@ public class Utility3D  {
 		return new_img;
 		
 	}
-	public static short [] ip_to_imgarray(ImagePlus img)
+	public static short [] ip_to_imgarray(ImagePlus img, int cur_channel, int cur_frame)
 	{
 		short [] pix=new short[img.getWidth()* img.getHeight()* img.getNSlices()];
-		int cur_channel=img.getChannel()-1, cur_frame=img.getFrame()-1;
+		cur_channel--;
+		cur_frame--;
 		for (int i=0; i<img.getNSlices(); i++)
 		{
 			short [] tmp=(short [])img.getStack().getProcessor(cur_channel+i*img.getNChannels()+cur_frame*img.getNChannels()*img.getNSlices()+1).getPixels();
@@ -365,6 +366,8 @@ public class Utility3D  {
 		return true;
 	}
 	
+	
+	
 	/************************************************************************************
 	 * check_neighbor
 	 * @param x
@@ -384,5 +387,56 @@ public class Utility3D  {
 		current_list.add(tmp);
 		status_array[x+y*width+z*width*height]=0;
 		return true;
+	}
+	public ArrayList <int []> make_kernel(short [] pix, float lateral_res, float vertical_res, float radius)
+	{
+		ArrayList <int []> rtn=new ArrayList <int []> ();
+		for (int i=-100; i<100; i++)
+		{
+			for (int j=-100; j<100; j++)
+			{
+				for (int k=-100; k<100; k++)
+				{
+					float x=i*lateral_res, y=j*lateral_res, z=k*vertical_res;
+					if (x*x+y*y+z*z<radius)
+					{
+						int [] temp={i, j, k};
+						rtn.add(temp);
+					}
+				}
+			}
+		}
+		return rtn;		
+	}
+	/***********************************************************************
+	 * apply_kernel_to_list:  Will take list of points from trackmate, and a kernel
+	 * found from make_kernel and will to return blob_list
+	 * @param hit_list ArrayList having int[4], x, y, z, index
+	 * @param kernel
+	 * @param w width of final image
+	 * @param h height of final image
+	 * @param d depth of final image
+	 * @return
+	 */
+	public ArrayList <ArrayList <int []>> apply_kernel_to_list(ArrayList <int []> hit_list, ArrayList <int []> kernel, int w, int h, int d)
+	{
+		ArrayList <ArrayList <int []>> rtn=new ArrayList <ArrayList <int []>> ();
+		for (ListIterator jF=hit_list.listIterator(); jF.hasNext();)
+		{
+			int [] current_point=(int [])jF.next();
+			ArrayList <int []> current_list=new ArrayList <int []> ();
+			for (ListIterator hF=hit_list.listIterator(); hF.hasNext();)
+			{
+				int [] kernel_point=(int []) hF.next();
+				int x=current_point[0]+kernel_point[0];
+				int y=current_point[1]+kernel_point[1];
+				int z=current_point[2]+kernel_point[2];
+				if (x<0||x>=w||y<0||y>=h||z<0||z>=d) continue;
+				int temp[]={x,y,z};
+				current_list.add(temp);
+			}
+			rtn.add(current_list);
+		}
+		return rtn;
 	}
 }

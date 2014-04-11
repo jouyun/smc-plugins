@@ -20,6 +20,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     ImagePlus myimg;
     int width, height;
     double rotation_step, total_rotation, xy_step, total_x, total_y;
+    boolean adjust_mode;
 
 	@Override
 	public void run(String arg0) {
@@ -51,6 +52,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         ImagePlus.addImageListener(this);
         rotation_step=1;
         xy_step=1;
+        adjust_mode=false;
 	}
 
 	public void init_frame()
@@ -126,10 +128,11 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         {
         	init_frame();
     		myimg.updateAndDraw();
+    		adjust_mode=true;
     		return;
         }
 
-        
+        if (!adjust_mode) return;
         
 		ImageProcessor ipf=myimg.getProcessor();
 		ImageProcessor ipi=myimg.getStack().getProcessor(myimg.getCurrentSlice()-1);
@@ -201,7 +204,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
     		myimg.updateAndDraw();
         }
-        if (keyChar=='f') 
+        if (keyChar=='d') 
         {
         	myimg.getProcessor().translate(xy_step, 0);
         	for (int i=0; i<width*height; i++)
@@ -227,13 +230,15 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		{
     			pixf[i]=last_pix[i];
     		}
+        	adjust_mode=false;
     		myimg.updateAndDraw();
         }
         if (keyChar=='r') 
         {
         	for (int i=0; i<width*height; i++)
     		{
-    			pixf[i]=original_pix[i];
+        		last_pix[i]=original_pix[i];
+    			pixf[i]=(original_pix[i]+pixi[i])/2;
     		}
     		myimg.updateAndDraw();
         }
