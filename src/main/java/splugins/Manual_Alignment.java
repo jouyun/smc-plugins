@@ -15,6 +15,7 @@ import ij.process.ImageProcessor;
 public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 	float [] original_pix;
 	float [] last_pix;
+	float [] base_pix;
 	ImageWindow win;
     ImageCanvas canvas;
     ImagePlus myimg;
@@ -60,7 +61,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 		ImageProcessor ipf=myimg.getProcessor();
 		ImageProcessor ipi=myimg.getStack().getProcessor(myimg.getCurrentSlice()-1);
 		float [] pixf=(float []) ipf.getPixels();
-		float [] pixi=(float []) ipi.getPixels();
+		base_pix=(float []) ipi.getPixels();
 		original_pix=new float [width*height];
 		last_pix=new float [width*height];
 		
@@ -68,7 +69,24 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 		{
 			original_pix[i]=pixf[i];
 			last_pix[i]=pixf[i];
-			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
+		}
+		
+	}
+	public void init_reverse_frame()
+	{
+		ImageProcessor ipf=myimg.getProcessor();
+		ImageProcessor ipi=myimg.getStack().getProcessor(myimg.getCurrentSlice()+1);
+		float [] pixf=(float []) ipf.getPixels();
+		base_pix=(float []) ipi.getPixels();
+		original_pix=new float [width*height];
+		last_pix=new float [width*height];
+		
+		for (int i=0; i<width*height; i++)
+		{
+			original_pix[i]=pixf[i];
+			last_pix[i]=pixf[i];
+			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
 		}
 		
 	}
@@ -131,13 +149,19 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		adjust_mode=true;
     		return;
         }
+        if (keyChar=='g') 
+        {
+        	init_reverse_frame();
+    		myimg.updateAndDraw();
+    		adjust_mode=true;
+    		return;
+        }
 
         if (!adjust_mode) return;
         
 		ImageProcessor ipf=myimg.getProcessor();
 		ImageProcessor ipi=myimg.getStack().getProcessor(myimg.getCurrentSlice()-1);
 		float [] pixf=(float []) ipf.getPixels();
-		float [] pixi=(float []) ipi.getPixels();
         for (int i=0; i<width*height; i++)
         {
         	pixf[i]=last_pix[i];
@@ -145,41 +169,65 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 
         if (keyChar=='z') 
         {
-        	myimg.getProcessor().rotate(-rotation_step);
+        	myimg.getProcessor().setInterpolationMethod(2);
+        	total_rotation+=-rotation_step;
+        	for (int i=0; i<width*height; i++)
+            {
+            	pixf[i]=original_pix[i];
+            }
+        	myimg.getProcessor().rotate(total_rotation);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
         if (keyChar=='v') 
         {
-        	myimg.getProcessor().rotate(rotation_step);
+        	myimg.getProcessor().setInterpolationMethod(2);
+        	total_rotation+=rotation_step;
+        	for (int i=0; i<width*height; i++)
+            {
+            	pixf[i]=original_pix[i];
+            }
+        	myimg.getProcessor().rotate(total_rotation);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
         if (keyChar=='c') 
         {
-        	myimg.getProcessor().rotate(90);
+        	myimg.getProcessor().setInterpolationMethod(2);
+        	total_rotation+=90;
+        	for (int i=0; i<width*height; i++)
+            {
+            	pixf[i]=original_pix[i];
+            }
+        	myimg.getProcessor().rotate(total_rotation);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
         if (keyChar=='x') 
         {
-        	myimg.getProcessor().rotate(180);
+        	myimg.getProcessor().setInterpolationMethod(2);
+        	total_rotation+=180;
+        	for (int i=0; i<width*height; i++)
+            {
+            	pixf[i]=original_pix[i];
+            }
+        	myimg.getProcessor().rotate(total_rotation);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
@@ -190,7 +238,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
@@ -200,7 +248,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
@@ -210,7 +258,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
@@ -220,7 +268,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
-    			pixf[i]=(pixf[i]+pixi[i])/2.0f;
+    			pixf[i]=(pixf[i]+base_pix[i])/2.0f;
     		}
     		myimg.updateAndDraw();
         }
@@ -232,13 +280,15 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
         	adjust_mode=false;
     		myimg.updateAndDraw();
+    		total_rotation=0;
         }
         if (keyChar=='r') 
         {
+        	total_rotation=0;
         	for (int i=0; i<width*height; i++)
     		{
         		last_pix[i]=original_pix[i];
-    			pixf[i]=(original_pix[i]+pixi[i])/2;
+    			pixf[i]=(original_pix[i]+base_pix[i])/2;
     		}
     		myimg.updateAndDraw();
         }
