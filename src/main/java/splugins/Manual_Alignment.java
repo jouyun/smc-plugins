@@ -7,6 +7,7 @@ import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.plugin.PlugIn;
@@ -291,6 +292,12 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     			pixf[i]=(original_pix[i]+base_pix[i])/2;
     		}
     		myimg.updateAndDraw();
+        }
+        if (keyChar=='h') 
+        {
+        	GenericDialog dlg=new GenericDialog("Help Menu");
+        	dlg.addHelp("r does reset");
+        	//dlg.show();
         }
 
 	}
