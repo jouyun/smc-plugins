@@ -73,7 +73,6 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	@Override
 	public void run(String arg0) {
 		ImagePlus img=WindowManager.getCurrentImage();
-		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames(); 
 		
 		GenericDialog gd=new GenericDialog("Histogram normalizer");
 		gd.addNumericField("Sample every how many spots:  ", 1, 0);
@@ -81,13 +80,16 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 		gd.addNumericField("Percentile_Min :  ", 10, 1);
 		gd.addNumericField("MyMax:  ", 255, 0);
 		gd.addNumericField("MyMin: ", 0, 0);
+		gd.addCheckbox("Whole Stack: ", true);
 		gd.showDialog();
 		double sample=gd.getNextNumber();
 		double pmax=gd.getNextNumber();
 		double pmin=gd.getNextNumber();
 		double max=gd.getNextNumber();
 		double min=gd.getNextNumber();
-		Normalize(img, sample, pmax, pmin, max, min);
+		boolean process_stack=gd.getNextBoolean();
+		if (process_stack) Normalize(img, sample, pmax, pmin, max, min);
+		else Normalize(img.getProcessor(), sample, pmax, pmin, max, min);
 		img.updateAndDraw();
 	}
 	/*******************************************************************************************
@@ -101,7 +103,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	 */
 	public static void Normalize(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
 	{
-		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		int slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
 		sample=1.0/sample;
 		for (int f=0; f<frames; f++)
 		{
@@ -145,7 +147,7 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 	 */
 	public static void NormalizeByte(ImagePlus img, double sample, double pmax, double pmin, double max, double min)
 	{
-		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		int slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
 		sample=1.0/sample;
 		for (int f=0; f<frames; f++)
 		{
@@ -179,6 +181,39 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 					}
 				}
 			}
+		}
+	}
+	/*******************************************************************************************
+	 * 					Normalize, normalizes a image based on percentiles
+	 * @param ip Image processor to normalize (must be float)
+	 * @param sample Sample image every "sample" pixels (sorting a whole image takes a while)
+	 * @param pmax The upper percentile (usually 90)
+	 * @param pmin The lower percentile (usually 10)
+	 * @param max What final pixel value will correspond to the upper percentile
+	 * @param min What final pixel value will correspond to the lower percentile
+	 */
+	public static void Normalize(ImageProcessor ip, double sample, double pmax, double pmin, double max, double min)
+	{
+		sample=1.0/sample;
+		List <Float> stk=new ArrayList<Float>();
+		float [] pix = (float [])ip.getPixels();
+		for (int i=0; i<pix.length; i++)
+		{
+			if (Math.random()<sample)
+			{
+				stk.add(pix[i]);
+			}
+		}
+		Collections.sort(stk);
+		int pminidx=(int)Math.floor(pmin/100.0*(float)stk.size());
+		int pmaxidx=(int)Math.floor(pmax/100.0*(float)stk.size());
+		float rmin=stk.get(pminidx);
+		float rgap=stk.get(pmaxidx)-stk.get(pminidx);
+		float ngap=(float)(max-min);
+		float rn=rgap/ngap;
+		for (int i=0; i<pix.length; i++)
+		{
+			pix[i]=(pix[i]-rmin)/rn+(float)min;
 		}
 	}
 
