@@ -408,7 +408,7 @@ public class rla_lipid_hough_transform_Zcode implements PlugIn {
 		float max=0.0f;
 		float maxvar = 0.0f;
 		int numObjects = 0;
-		twObjects = new TextWindow(imageName+"_RESULTS.xls","x\ty\tz\tradius\though\tvar\tparameters",null,900,700);
+		twObjects = new TextWindow(imageName+"_RESULTS.xls","x\ty\tz\tradius\though\tvar\tparameters","",900,700);
 		tpObjects = twObjects.getTextPanel();
 		//IJ.log("Image: "+imageName+ "  Hough: "+threshold+"  Var: "+varThresh + "  Auto: "+autoThresh +"  Rad: "+startradius +"-"+endradius +"  numMask: "+ numSliceMask );
 		do{

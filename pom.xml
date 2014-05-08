@@ -21,7 +21,7 @@
 <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <imagej.app.directory>/home/smc/Fiji.app</imagej.app.directory>
-    <imagej1.version>1.48t</imagej1.version>
+    <imagej1.version>1.48v</imagej1.version>
     <delete.other.versions>true</delete.other.versions>
   </properties>
 	<dependencies>
@@ -44,6 +44,11 @@
 			<groupId>net.java.loci</groupId>
 			<artifactId>jsr308-all</artifactId>
 			<version>1.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.boofcv</groupId>
+			<artifactId>xuggler</artifactId>
+			<version>0.16</version>
 		</dependency>
 	</dependencies>
 

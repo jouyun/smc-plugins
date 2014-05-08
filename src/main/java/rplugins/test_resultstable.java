@@ -17,7 +17,7 @@ public class test_resultstable implements PlugIn {
 		FileSaver FS = new FileSaver(imp);
 		IJ.log(""+FS.getDescriptionString());
 		
-		TextWindow myResultsWin = new TextWindow("My Results","ONE\tTWO\tTHREE",null,900,700);
+		TextWindow myResultsWin = new TextWindow("My Results","ONE\tTWO\tTHREE","",900,700);
 		TextPanel myResultsPanel = myResultsWin.getTextPanel();
 		myResultsPanel.updateColumnHeadings("ONE\tTWO\tTHREE");
 		myResultsPanel.appendLine("1\t2\t3");
