@@ -4,11 +4,16 @@ import ij.plugin.filter.PlugInFilter;
 import ij.process.*;
 import ij.gui.*;
 import ij.util.Tools;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+
 import ij.measure.*;
+
 import java.awt.Rectangle;
+
+import jguis.PlotWindow4;
 
 public class Multi_Spectral_Profiler implements PlugInFilter, MouseListener, MouseMotionListener, Measurements, KeyListener {
     ImagePlus img;
@@ -127,11 +132,28 @@ public class Multi_Spectral_Profiler implements PlugInFilter, MouseListener, Mou
             updateProfile(x, y);
             }*/
     }
-   
+    public void MakeJayPlot()
+    {
+    	float [][] my_x_list=new float[num_spectra][channels];
+    	float [][] my_y_list=new float[num_spectra][channels];
+    	for (int i=0; i<num_spectra; i++)
+		{
+			normalize(y_list[i]);
+			for (int j=0; j<channels; j++)
+			{
+				my_x_list[i][j]=(float) x[j];
+				my_y_list[i][j]=(float) y_list[i][j];
+			}
+		}
+    	PlotWindow4 myjaywindow=new PlotWindow4("Profile","Channel","Intensity",my_x_list,my_y_list,null);
+    	myjaywindow.draw();
+    }
 	public void keyPressed(KeyEvent e) {
 		char rtn;
 		rtn=e.getKeyChar();
 		if (rtn=='c') num_spectra=0;
+		if (rtn=='J'&&e.isShiftDown()) MakeJayPlot();
+		if (rtn=='q') cleanup();
 		if (rtn!='g') return;
 		ImageStack stack = img.getStack();
 		double[][] tmp;
@@ -271,6 +293,14 @@ public class Multi_Spectral_Profiler implements PlugInFilter, MouseListener, Mou
        canvas.removeKeyListener(this);
        pwin = null;
        listenersRemoved = true;
+    }
+    void cleanup()
+    {
+    	canvas.removeMouseListener(this);
+        canvas.removeMouseMotionListener(this);
+        canvas.removeKeyListener(this);
+        pwin = null;
+        listenersRemoved = true;
     }
 
 	void normalize(double input[])
