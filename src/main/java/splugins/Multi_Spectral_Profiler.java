@@ -303,14 +303,20 @@ public class Multi_Spectral_Profiler implements PlugInFilter, MouseListener, Mou
         listenersRemoved = true;
     }
 
-	void normalize(double input[])
+	public static void normalize(double input[])
 	{
 		double max;
 		max=-10000.0;
-		for (int i=0; i<channels; i++) if (input[i]>max) max=input[i];
-		for (int i=0; i<channels; i++) input[i]=input[i]/max;
+		for (int i=0; i<input.length; i++) if (input[i]>max) max=input[i];
+		for (int i=0; i<input.length; i++) input[i]=input[i]/max;
 	}
-	
+	public static void normalize(float input[])
+	{
+		float max;
+		max=-10000.0f;
+		for (int i=0; i<input.length; i++) if (input[i]>max) max=input[i];
+		for (int i=0; i<input.length; i++) input[i]=input[i]/max;
+	}
     //public void keyPressed(KeyEvent e) {}
     public void keyTyped(KeyEvent e) {}
     public void mouseReleased(MouseEvent e) {}
