@@ -46,9 +46,10 @@
 			<version>1.1.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.boofcv</groupId>
-			<artifactId>xuggler</artifactId>
-			<version>0.16</version>
+			<groupId>org.kie.modules</groupId>
+			<artifactId>org-apache-commons-math</artifactId>
+			<version>6.1.0.Beta3</version>
+			<classifier>tests</classifier>
 		</dependency>
 	</dependencies>
 
