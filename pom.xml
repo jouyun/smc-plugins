@@ -51,6 +51,16 @@
 			<version>6.1.0.Beta3</version>
 			<classifier>tests</classifier>
 		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>fiji-lib</artifactId>
+			<version>2.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>imagescience</artifactId>
+			<version>2.4.2-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
