@@ -18,14 +18,14 @@ public class MultiThread_Test implements PlugIn {
 
 	public void run(String arg) {  
 	  
-		final ImagePlus dot_blot = new Opener()  
-			.openURL("http://rsb.info.nih.gov/ij/images/blobs.gif");  
+		//final ImagePlus dot_blot = new Opener().openURL("http://rsb.info.nih.gov/ij/images/blobs.gif");
+		final ImagePlus dot_blot=WindowManager.getCurrentImage();
 		
 		
 		
 
 		final int starting_threshold = 1;  
-		final int ending_threshold = 15;  
+		final int ending_threshold = 35;  
 		final int n_tests = ending_threshold - starting_threshold + 1;  
 		final AtomicInteger ai = new AtomicInteger(starting_threshold);  
 
@@ -34,10 +34,13 @@ public class MultiThread_Test implements PlugIn {
 
 		final Thread[] threads = newThreadArray(); 
 		
-		final int [] scale_array={2, 4, 8, 16, 32, 2, 4, 8, 16, 32, 2, 4, 8, 16, 32};
-		final int [] order_array={2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4};
+		final int [] scale_array={1, 2, 4, 8, 16,1, 2, 4, 8, 16,1, 2, 4, 8, 16,1, 2, 4, 8, 16,1, 2, 4, 8, 16,1, 2, 4, 8, 16,1, 2, 4, 8, 16,};
+		final int [] order_array={2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8};
 		
-		/*for (int ithread = 0; ithread < threads.length; ithread++) 
+		final int [] sigma_scale_array={1, 2, 4, 8, 16, 32, 1, 2, 4, 8, 16, 32};
+		final int [] int_scale_array={1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3};
+		
+		for (int ithread = 0; ithread < threads.length; ithread++) 
 		{  
 
 			// Concurrently run in as many threads as CPUs  
@@ -60,19 +63,17 @@ public class MultiThread_Test implements PlugIn {
 					{  
 						// 'i' is the lower bound of the threshold window  
 						ImageProcessor ip = dot_blot.getProcessor().duplicate();
-						//ip.setInterpolationMethod(2);
-						//ip.rotate((double)i/10.0);
-						//(new FJLaplacian()).run()
-						//ip.setMinAndMax(i, 255);  
+
 						ImagePlus imp = new ImagePlus("Threshold " + i, ip);
 						
-						final Image img = Image.wrap(imp);
-						final Image newimg = new FloatImage(img);
-						final Differentiator diff = new Differentiator();
-						diff.run(newimg,scale_array[i],order_array[i],order_array[i],0);
+						Image img = Image.wrap(imp);
+						Image newimg = new FloatImage(img);
+						Differentiator diff = new Differentiator();
+						diff.run(newimg,scale_array[i-starting_threshold],order_array[i-starting_threshold],order_array[i-starting_threshold],0);
 						//newimg.imageplus().show();
 						results[i-starting_threshold] = newimg.imageplus().getProcessor();  
-						//res.getWindow().setVisible(false);  
+						//results[i-starting_threshold] = imp.getProcessor();
+						IJ.log("Thread " + (i-starting_threshold));
 					}  
 				}
 			};  
@@ -83,18 +84,19 @@ public class MultiThread_Test implements PlugIn {
     	// 	now the results array is full. Just show them in a stack:  
     	final ImageStack stack = new ImageStack(dot_blot.getWidth(),  
                                             	dot_blot.getHeight());  
-    	for (int i=0; i< results.length; i++) {  
+    	for (int i=0; i< results.length; i++) { 
+    		IJ.log(""+i+" "+results[i].getWidth());
     		stack.addSlice(Integer.toString(i), results[i]);  
     	}  
 
-    	new ImagePlus("Results", stack).show();  */
+    	new ImagePlus("Results", stack).show();  
 	}  
 
 	/** Create a Thread[] array as large as the number of processors available. 
 	 * 	From Stephan Preibisch's Multithreading.java class. See: 
 	 * 	http://repo.or.cz/w/trakem2.git?a=blob;f=mpi/fruitfly/general/MultiThreading.java;hb=HEAD 
 	*/  
-	private Thread[] newThreadArray() {  
+	private static Thread[] newThreadArray() {  
 		int n_cpus = Runtime.getRuntime().availableProcessors();  
 		IJ.log("CPUs:  "+n_cpus);
 		return new Thread[n_cpus];  
