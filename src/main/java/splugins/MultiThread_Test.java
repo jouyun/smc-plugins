@@ -73,7 +73,7 @@ public class MultiThread_Test implements PlugIn {
 						//newimg.imageplus().show();
 						results[i-starting_threshold] = newimg.imageplus().getProcessor();  
 						//results[i-starting_threshold] = imp.getProcessor();
-						IJ.log("Thread " + (i-starting_threshold));
+						//IJ.log("Thread " + (i-starting_threshold));
 					}  
 				}
 			};  
@@ -85,7 +85,6 @@ public class MultiThread_Test implements PlugIn {
     	final ImageStack stack = new ImageStack(dot_blot.getWidth(),  
                                             	dot_blot.getHeight());  
     	for (int i=0; i< results.length; i++) { 
-    		IJ.log(""+i+" "+results[i].getWidth());
     		stack.addSlice(Integer.toString(i), results[i]);  
     	}  
 

@@ -73,7 +73,7 @@ public class find_colocalization_candidates_3D implements PlugIn {
 	@Override
 	public void run(String arg) {
 		int lateral_half=20;
-		int z_clip=5;
+		int z_clip=3;
 		
 		ImagePlus img;
 		img=WindowManager.getCurrentImage();
@@ -156,6 +156,7 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			for (int current_z=0; current_z<z_clip; current_z++)
 			{
 				if (current_z+tmp_pt[2]>=depth) continue;
+				if (current_z+tmp_pt[2]<0) continue;
 				//Copy first channel
 				float [] new_pix=(float []) new_img.getStack().getProcessor((i*z_clip+current_z)*2+1).getPixels();
 				float [] old_pix=(float []) img.getStack().getProcessor(2*(tmp_pt[2]+current_z)+1).getPixels();
@@ -163,7 +164,10 @@ public class find_colocalization_candidates_3D implements PlugIn {
 				{
 					for (int k=-lateral_half; k<lateral_half; k++)
 					{
-						new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
+						if ((tmp_pt[1]+k>=0&&tmp_pt[1]+k<height&&tmp_pt[0]+j>=0&&tmp_pt[0]+j<width)) 
+						{
+							new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
+						}
 					}
 				}
 				//Copy segmented channel
@@ -173,7 +177,10 @@ public class find_colocalization_candidates_3D implements PlugIn {
 				{
 					for (int k=-lateral_half; k<lateral_half; k++)
 					{
-						new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
+						if ((tmp_pt[1]+k>=0&&tmp_pt[1]+k<height&&tmp_pt[0]+j>=0&&tmp_pt[0]+j<width))
+						{
+							new_pix[(k+lateral_half)*lateral_half*2+j+lateral_half]=old_pix[(tmp_pt[1]+k)*width+tmp_pt[0]+j];
+						}
 					}
 				}
 			}

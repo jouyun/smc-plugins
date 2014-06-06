@@ -59,7 +59,6 @@ public class Threaded_Derivatives implements PlugIn {
 					for (int i = myi.getAndIncrement(); i <= number_criteria-1;  
 							i = myi.getAndIncrement()) 
 					{
-						IJ.log("Am in counter: "+i);
 						if (i==0) my_results[0]=execute_structures(img, sigma_scale_array, int_scale_array);
 						if (i==1) my_results[1]=execute_derivatives(img, x, x, z, scales);
 						if (i==2) my_results[2]=execute_laplacians(img, laplacian_scales);
@@ -199,7 +198,6 @@ public class Threaded_Derivatives implements PlugIn {
     	for (int i=0; i< results.length; i++) { 
     		stack.addSlice(""+i+"Structure_"+sscales[i/2]+"_"+iscales[i/2], results[i]); 
     		//stack.addSlice(""+i, results[i]);
-    		IJ.log(""+results.length);
     	}  
 
     	return (new ImagePlus("Structures", stack));  
