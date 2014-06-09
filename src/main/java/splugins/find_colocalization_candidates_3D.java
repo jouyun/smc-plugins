@@ -111,9 +111,35 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			ArrayList <int []> current_list=(ArrayList <int []>)jF.next();
 			//Throw out ones too small
 			if (current_list.size()<minimum_size) continue;
+			
+			//Do neighborhood investigation
+			Utility3D my3D=new Utility3D();
+			ArrayList <ArrayList <int []>> dummy_list=new ArrayList <ArrayList <int[]>> ();
+			dummy_list.add(current_list);
+			short [] imgarray=my3D.blobarray_to_imgarray(dummy_list, width, height, depth);
+			//ImagePlus tmpA=my3D.imgarray_to_ip(imgarray, width, height, depth);
+			my3D.dilate_no_merge(imgarray, width, height, depth,2);
+			//ImagePlus tmpB=my3D.imgarray_to_ip(imgarray, width, height, depth);
+			//tmpA.show();
+			//tmpB.show();
+			dummy_list=my3D.find_blobs(imgarray, width, height, depth);
+			ArrayList <int []> expanded_list=dummy_list.get(0);
+			
+			//Tabulate statistics for expanded blob
+			double [] expanded_averages=new double[img.getNChannels()];
+			for (ListIterator iF=expanded_list.listIterator(); iF.hasNext();)
+			{
+				int [] current_point=(int [])iF.next();
+				for (int i=0; i<img.getNChannels(); i++)
+				{
+					float [] old_pix=(float []) img.getStack().getProcessor(i+(current_point[2])*img.getNChannels()+cur_frame*img.getNChannels()*depth+1).getPixels();
+					expanded_averages[i]=expanded_averages[i]+old_pix[current_point[0]+current_point[1]*width];
+				}
+			}
+
+			//Tabulate statistics for actual blob
 			double [] averages=new double[img.getNChannels()];
 			number_big_enough++;
-			//Tabulate statistics
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
 				int [] current_point=(int [])iF.next();
@@ -123,6 +149,13 @@ public class find_colocalization_candidates_3D implements PlugIn {
 					averages[i]=averages[i]+old_pix[current_point[0]+current_point[1]*width];
 				}
 			}
+			
+			//Subtract, find average of area AROUND actual blob and the average IN actual blob
+			for (int i=0; i<img.getNChannels(); i++)
+			{
+				expanded_averages[i]=expanded_averages[i]-averages[i];
+				expanded_averages[i]=expanded_averages[i]/(expanded_list.size()-current_list.size());
+			}
 			for (int i=0; i<img.getNChannels(); i++) 
 			{
 				averages[i]=averages[i]/(double)current_list.size();
@@ -130,7 +163,8 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			
 			if (img.getNChannels()>1)
 			{
-				if (averages[0]/averages[cur_channel]<selection_criteria) continue;
+				if (averages[0]/expanded_averages[0]<1.4) continue;
+				//OLDif (averages[0]/averages[cur_channel]<selection_criteria) continue;
 				//if (averages[0]<selection_criteria) continue;
 			}
 			//If meets criteria, log in results
@@ -144,6 +178,9 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			for (int i=0; i<img.getNChannels(); i++) 
 			{
 				the_table.addValue("Channel"+(i+1), averages[i]);
+				the_table.addValue("ExpChannel"+(i+1), expanded_averages[i]);
+				the_table.addValue("CurrentSize"+(i+1), current_list.size());
+				the_table.addValue("ExpandedSize"+(i+1), expanded_list.size());
 			}
 		}
 		ImagePlus new_img=NewImage.createFloatImage("TempImg", lateral_half*2, lateral_half*2, 2*z_clip*the_table.getCounter(), NewImage.FILL_BLACK);

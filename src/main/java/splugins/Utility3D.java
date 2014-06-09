@@ -263,32 +263,34 @@ public class Utility3D  {
 		}	
 	}
 	
-	public void dilate_no_merge(short [] input, int wid, int het, int dep)
+	public void dilate_no_merge(short [] input, int wid, int het, int dep, int max)
 	{
 		width=wid;
 		height=het;
 		depth=dep;
-		int max=0;
 		pixel_array =input; 
 		
 		ArrayList <ArrayList <int []>> mylist = find_labeled_blobs(input, wid, het, dep);
 		
 		boolean had_new=true;
-		for (int i=0; i<max; i++)
+		for (int s=0; s<max; s++)
 		{
-			current_list=new ArrayList<int []>();
-			for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
+			for (int i=0; i<mylist.size(); i++)
 			{
-				int [] current_point=(int [])jF.next();
-				if (check_neighbor_grow(current_point[0]+1, current_point[1], current_point[2],i)) ;
-				if (check_neighbor_grow(current_point[0]-1, current_point[1], current_point[2],i)) ;
-				if (check_neighbor_grow(current_point[0], current_point[1]+1, current_point[2],i)) ;
-				if (check_neighbor_grow(current_point[0], current_point[1]-1, current_point[2],i)) ;
-				if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]+1,i)) ;
-				if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]-1,i)) ;
+				current_list=new ArrayList<int []>();
+				for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
+				{
+					int [] current_point=(int [])jF.next();
+					if (check_neighbor_grow(current_point[0]+1, current_point[1], current_point[2],i)) ;
+					if (check_neighbor_grow(current_point[0]-1, current_point[1], current_point[2],i)) ;
+					if (check_neighbor_grow(current_point[0], current_point[1]+1, current_point[2],i)) ;
+					if (check_neighbor_grow(current_point[0], current_point[1]-1, current_point[2],i)) ;
+				//	if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]+1,i)) ;
+				//	if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]-1,i)) ;
+				}
+				mylist.get(i).clear();
+				mylist.get(i).addAll(current_list);
 			}
-			mylist.get(i).clear();
-			mylist.get(i).addAll(current_list);
 		}
 	}
 	public void clean_fences(short [] input, int w, int h, int d)

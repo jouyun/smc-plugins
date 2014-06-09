@@ -9,6 +9,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
+import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import imagescience.feature.Differentiator;
 import imagescience.feature.Laplacian;
@@ -36,7 +37,7 @@ public class Threaded_Derivatives implements PlugIn {
 		
 		final int [] z=new int[x.length];
 		final AtomicInteger myi=new AtomicInteger(0);
-		final int number_criteria=3;
+		final int number_criteria=4;
 		final ImagePlus[] my_results=new ImagePlus[number_criteria];
 		final Thread[] threads=newThreadArray();
 		//my_results[0]=execute_structures(img, sigma_scale_array, int_scale_array);
@@ -62,6 +63,7 @@ public class Threaded_Derivatives implements PlugIn {
 						if (i==0) my_results[0]=execute_structures(img, sigma_scale_array, int_scale_array);
 						if (i==1) my_results[1]=execute_derivatives(img, x, x, z, scales);
 						if (i==2) my_results[2]=execute_laplacians(img, laplacian_scales);
+						if (i==3) my_results[3]=execute_hessians(img, laplacian_scales);
 					}
 				}
 			};
@@ -259,6 +261,113 @@ public class Threaded_Derivatives implements PlugIn {
     	return (new ImagePlus("Laplacians", stack));  
 	}  
 
+	public static ImagePlus execute_hessians(final ImagePlus input, final double [] scales)
+	{
+		final AtomicInteger ai = new AtomicInteger(0);  
+		final int num_entries=scales.length;
+
+		// store all result images here  
+		final ImageProcessor[] results = new ImageProcessor[num_entries*8];  
+
+		final Thread[] threads = newThreadArray(); 
+		
+		for (int ithread = 0; ithread < threads.length; ithread++) 
+		{  
+
+			// Concurrently run in as many threads as CPUs  
+
+			threads[ithread] = new Thread() 
+			{  
+                      
+				{ setPriority(Thread.NORM_PRIORITY); }  
+
+				public void run() 
+				{  
+
+					// Each thread processes a few items in the total list  
+					// Each loop iteration within the run method  
+					// has a unique 'i' number to work with  
+					// and to use as index in the results array:  
+
+					for (int i = ai.getAndIncrement(); i <= num_entries;  
+							i = ai.getAndIncrement()) 
+					{  
+						// Find A matrix  
+						ImageProcessor Aip = input.getProcessor().duplicate();
+						ImagePlus Aimp = new ImagePlus("Hessians " + scales[i], Aip);
+						Image Aimg = Image.wrap(Aimp);
+						Image Anewimg = new FloatImage(Aimg);
+						Differentiator Adiff = new Differentiator();
+						Adiff.run(Anewimg,scales[i],2,0,0);
+						
+						//Find B matrix
+						ImageProcessor Bip = input.getProcessor().duplicate();
+						ImagePlus Bimp = new ImagePlus("Hessians " + scales[i], Bip);
+						Image Bimg = Image.wrap(Bimp);
+						Image Bnewimg = new FloatImage(Bimg);
+						Differentiator Bdiff = new Differentiator();
+						Bdiff.run(Bnewimg,scales[i],1,1,0);
+						
+						//Find D matrix
+						ImageProcessor Dip = input.getProcessor().duplicate();
+						ImagePlus Dimp = new ImagePlus("Hessians " + scales[i], Dip);
+						Image Dimg = Image.wrap(Dimp);
+						Image Dnewimg = new FloatImage(Dimg);
+						Differentiator Ddiff = new Differentiator();
+						Ddiff.run(Dnewimg,scales[i],0,2,0);
+						
+						float [] Apix=(float [])Anewimg.imageplus().getProcessor().getPixels();
+						float [] Bpix=(float [])Bnewimg.imageplus().getProcessor().getPixels();
+						float [] Dpix=(float [])Dnewimg.imageplus().getProcessor().getPixels();
+						
+						float [] module=new float[Apix.length];
+						float [] trace=new float[Apix.length];
+						float [] determinant=new float[Apix.length];
+						float [] firsteigen=new float[Apix.length];
+						float [] secondeigen=new float[Apix.length];
+						float [] orientation=new float[Apix.length];
+						float [] gammanorm=new float[Apix.length];
+						float [] sqgammanorm=new float[Apix.length];
+						
+						final float gamma1=(float) Math.pow(Math.pow(1, .75),4);
+						final float gamma2=(float) Math.pow(Math.pow(1, .75),2);
+						
+						for (int j=0; j<module.length; j++)
+						{
+							float a=Apix[j], b=Bpix[j], c=Bpix[j], d=Dpix[j], amd=a-d;
+							module[j]=(float)Math.sqrt(a*a+b*c+d*d);
+							trace[j]=(float)(a+d);
+							determinant[j]=a*d-c*b;
+							firsteigen[j]=(a+2)/2+(float)Math.sqrt((4*b*b+(amd)*(amd))/2);
+							secondeigen[j]=(a+2)/2-(float)Math.sqrt((4*b*b+(amd)*(amd))/2);
+							orientation[j]=1.0f/2.0f*(float)Math.acos(4*b*b+(amd)*(amd));
+							gammanorm[j]=gamma1*amd*amd*(amd-4*b*b);
+							sqgammanorm[j]=gamma2*(amd*amd+4*b*b);
+						}
+						
+						results[i*8+0]=new FloatProcessor(input.getWidth(), input.getHeight(), module);
+						results[i*8+1]=new FloatProcessor(input.getWidth(), input.getHeight(), trace);
+						results[i*8+2]=new FloatProcessor(input.getWidth(), input.getHeight(), determinant);
+						results[i*8+3]=new FloatProcessor(input.getWidth(), input.getHeight(), firsteigen);
+						results[i*8+4]=new FloatProcessor(input.getWidth(), input.getHeight(), secondeigen);
+						results[i*8+5]=new FloatProcessor(input.getWidth(), input.getHeight(), orientation);
+						results[i*8+6]=new FloatProcessor(input.getWidth(), input.getHeight(), gammanorm);
+						results[i*8+7]=new FloatProcessor(input.getWidth(), input.getHeight(), sqgammanorm);
+					}  
+				}
+			};  
+		}  
+
+    	startAndJoin(threads);  
+
+    	// 	now the results array is full. Just show them in a stack:  
+    	final ImageStack stack = new ImageStack(input.getWidth(),input.getHeight());  
+    	for (int i=0; i< results.length; i++) { 
+    		stack.addSlice(""+i+"Hessian_"+scales[i/8], results[i]); 
+    	}  
+
+    	return (new ImagePlus("Hessians", stack));  
+	}  
 	
 	/** Create a Thread[] array as large as the number of processors available. 
 	 * 	From Stephan Preibisch's Multithreading.java class. See: 
