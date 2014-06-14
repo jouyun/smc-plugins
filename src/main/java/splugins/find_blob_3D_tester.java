@@ -24,11 +24,14 @@ import ij.process.ShortProcessor;
 import ij.*;
 import ij.process.*;
 import ij.gui.*;
+
 import java.awt.*;
+
 import ij.plugin.filter.*;
 import ij.process.*;
 import ij.gui.*;
 import ij.util.Tools;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -37,7 +40,6 @@ import java.util.List;
 import ij.measure.*;
 
 import java.awt.Rectangle;
-
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Choice;
@@ -80,7 +82,7 @@ public class find_blob_3D_tester implements PlugIn {
 		GenericDialog dlg=new GenericDialog("3D segmentation");
 		dlg.addNumericField("Threshold", 500, 0);
 		dlg.addNumericField("Minimum size", 80, 0);
-		dlg.addNumericField("Selection filter", 0.5, 2);
+		dlg.addNumericField("Selection filter", 200, 2);
 		dlg.showDialog();
 		float threshold=(float) dlg.getNextNumber();
 		int minimum_size=(int)dlg.getNextNumber();
@@ -102,12 +104,42 @@ public class find_blob_3D_tester implements PlugIn {
 		int number_big_enough=0;
 		ResultsTable the_table=ResultsTable.getResultsTable();
 		the_table.reset();
+		float [] minmax=Histogram_Normalize_Percentile.Find_Percentiles(img, 100, 99, 10, 1, 1);
+		//IJ.log("minmax: "+minmax[0]+","+minmax[1]+","+minmax[2]);
+		Utility3D my3D=new Utility3D();
+		ArrayList <ArrayList <int []>> expanded_rtn=(ArrayList <ArrayList <int []>>) rtn.clone();
+		short [] imgarray=my3D.blobarray_to_imgarray(expanded_rtn, width, height, depth);
+		my3D.dilate_no_merge(imgarray, rtn, width, height, depth, 2);
 		for (ListIterator jF=rtn.listIterator(); jF.hasNext();)
 		{
 			idx++;
 			ArrayList <int []> current_list=(ArrayList <int []>)jF.next();
+			
 			//Throw out ones too small
 			if (current_list.size()<minimum_size) continue;
+			
+			/*Experimental*/
+			//Do neighborhood investigation
+			ArrayList <int []> expanded_list=expanded_rtn.get(idx-1);
+			
+			//Tabulate statistics for expanded blob
+			double [] expanded_averages=new double[img.getNChannels()];
+			for (ListIterator iF=expanded_list.listIterator(); iF.hasNext();)
+			{
+				int [] current_point=(int [])iF.next();
+				for (int i=0; i<img.getNChannels(); i++)
+				{
+					float [] old_pix=(float []) img.getStack().getProcessor(i+(current_point[2])*img.getNChannels()+cur_frame*img.getNChannels()*depth+1).getPixels();
+					expanded_averages[i]=expanded_averages[i]+old_pix[current_point[0]+current_point[1]*width];
+				}
+			}
+
+			for (int i=0; i<img.getNChannels(); i++) 
+			{
+				expanded_averages[i]=expanded_averages[i]/(double)expanded_list.size();
+			}
+			/*End experimental*/
+			
 			double [] averages=new double[img.getNChannels()];
 			number_big_enough++;
 			//Tabulate statistics
@@ -125,9 +157,13 @@ public class find_blob_3D_tester implements PlugIn {
 				averages[i]=averages[i]/(double)current_list.size();
 			}
 			//If meets criteria, log in results
+			
 			if (img.getNChannels()>1)
 			{
-				if (averages[0]/averages[cur_channel]<selection_criteria) continue;
+				//if (averages[0]/averages[cur_channel]<selection_criteria) continue;
+				//if (expanded_averages[0]<(minmax[1]-minmax[0])*selection_criteria+minmax[0]||expanded_averages[0]>(minmax[1]-minmax[0])*0.4+minmax[0]) continue;
+				//if (expanded_averages[0]<(minmax[1]-minmax[0])*selection_criteria+minmax[0]) continue;
+				if (expanded_averages[0]<minmax[2]*selection_criteria+minmax[0]) continue;
 			}
 			the_table.incrementCounter();
 			the_table.addValue("Volume", (double)current_list.size());
@@ -138,7 +174,7 @@ public class find_blob_3D_tester implements PlugIn {
 			the_table.addValue("Z", tmp_pt[2]);
 			for (int i=0; i<img.getNChannels(); i++) 
 			{
-				the_table.addValue("Channel"+(i+1), averages[i]);
+				the_table.addValue("Channel"+(i+1), expanded_averages[i]);
 			}
 			
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)

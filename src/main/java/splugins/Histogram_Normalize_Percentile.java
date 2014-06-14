@@ -2,6 +2,7 @@ package splugins;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -24,11 +25,14 @@ import ij.process.ShortProcessor;
 import ij.*;
 import ij.process.*;
 import ij.gui.*;
+
 import java.awt.*;
+
 import ij.plugin.filter.*;
 import ij.process.*;
 import ij.gui.*;
 import ij.util.Tools;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -37,7 +41,6 @@ import java.util.List;
 import ij.measure.*;
 
 import java.awt.Rectangle;
-
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Choice;
@@ -66,6 +69,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Stack;
+
 import ij.plugin.PlugIn;
 
 public class Histogram_Normalize_Percentile implements PlugIn {
@@ -215,6 +219,84 @@ public class Histogram_Normalize_Percentile implements PlugIn {
 		{
 			pix[i]=(pix[i]-rmin)/rn+(float)min;
 		}
+	}
+	public static float [] Find_Percentiles(float [] pix, double sample, double pmax, double pmin)
+	{
+		sample=1.0/sample;
+		List <Float> stk=new ArrayList<Float>();
+		for (int i=0; i<pix.length; i++)
+		{
+			if (Math.random()<sample)
+			{
+				stk.add(pix[i]);
+			}
+		}
+		Collections.sort(stk);
+		return get_stats(stk, pmax, pmin);
+	}
+	public static float [] Find_Percentiles(ImagePlus img, double sample, double pmax, double pmin)
+	{
+		int slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		int current_channel=img.getChannel()-1, current_frame=img.getFrame()-1;
+		sample=1.0/sample;
+		List <Float> stk=new ArrayList<Float>();
+		for (int s=0; s<slices; s++)
+		{
+			float [] pix = (float [])img.getStack().getProcessor(current_frame*slices*channels+s*channels+current_channel+1).getPixels();
+			for (int i=0; i<pix.length; i++)
+			{
+				if (Math.random()<sample)
+				{
+					stk.add(pix[i]);
+				}
+			}
+		}
+		Collections.sort(stk);
+		return get_stats(stk, pmax, pmin);
+	}
+	public static float [] Find_Percentiles(ImagePlus img, double sample, double pmax, double pmin, int current_channel, int current_frame)
+	{
+		int slices=img.getNSlices(), channels=img.getNChannels(), frames=img.getNFrames();
+		current_channel--;
+		current_frame--;
+		sample=1.0/sample;
+		List <Float> stk=new ArrayList<Float>();
+		for (int s=0; s<slices; s++)
+		{
+			float [] pix = (float [])img.getStack().getProcessor(current_frame*slices*channels+s*channels+current_channel+1).getPixels();
+			for (int i=0; i<pix.length; i++)
+			{
+				if (Math.random()<sample)
+				{
+					stk.add(pix[i]);
+				}
+			}
+		}
+		Collections.sort(stk);
+		return get_stats(stk, pmax, pmin);		
+	}
+	private static float [] get_stats(List <Float> stk, double pmax, double pmin)
+	{
+		float [] rtn=new float[3];
+		double average=0.0f;
+		double		sigma=0.0f;
+		int num_pix=0;
+		int pminidx=(int)Math.floor(pmin/100.0*(float)stk.size());
+		int pmaxidx=(int)Math.floor(pmax/100.0*(float)stk.size());
+		for (int i=0; i<(int)(stk.size()*pmin/100.0f); i++)
+		{
+			average=average+(double)stk.get(i);
+			sigma=sigma+(double)stk.get(i)*(double)stk.get(i);
+			num_pix++;
+		}
+		average=average/(double)(num_pix);
+		sigma=(double)Math.sqrt(sigma/(double)(num_pix)-average*average);
+		
+		
+		rtn[0]=stk.get(pminidx);
+		rtn[1]=stk.get(pmaxidx);
+		rtn[2]=(float)sigma;
+		return rtn;
 	}
 
 }

@@ -92,7 +92,7 @@ public class Percentile_Threshold implements PlugIn{
 		new_img.updateAndDraw();
 	}
 	
-	static byte [] get_mask(float [] pix, int width, int height, float prctile, float SNR)
+	public static byte [] get_mask(float [] pix, int width, int height, float prctile, float SNR)
 	{
 		List <Float> stk=new ArrayList<Float>();
 		

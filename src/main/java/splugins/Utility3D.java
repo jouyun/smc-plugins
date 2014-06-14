@@ -293,6 +293,47 @@ public class Utility3D  {
 			}
 		}
 	}
+	public void dilate_no_merge(short [] input, ArrayList <ArrayList <int []>> masterlist, int wid, int het, int dep, int max)
+	{
+		width=wid;
+		height=het;
+		depth=dep;
+		pixel_array =input; 
+		
+		ArrayList <ArrayList <int []>> mylist=new ArrayList <ArrayList <int []>> ();
+		for (int i=0; i<masterlist.size(); i++)
+		{
+			ArrayList <int []> tmplist=masterlist.get(i);
+			ArrayList <int []> current_tmp_list=new ArrayList <int []> ();
+			for (int j=0; j<tmplist.size(); j++)
+			{
+				current_tmp_list.add(tmplist.get(j));
+			}
+			mylist.add(current_tmp_list);
+		}
+		
+		boolean had_new=true;
+		for (int s=0; s<max; s++)
+		{
+			for (int i=0; i<mylist.size(); i++)
+			{
+				current_list=new ArrayList<int []>();
+				for (ListIterator jF=mylist.get(i).listIterator(); jF.hasNext();)
+				{
+					int [] current_point=(int [])jF.next();
+					if (check_neighbor_grow(current_point[0]+1, current_point[1], current_point[2],i)) ;
+					if (check_neighbor_grow(current_point[0]-1, current_point[1], current_point[2],i)) ;
+					if (check_neighbor_grow(current_point[0], current_point[1]+1, current_point[2],i)) ;
+					if (check_neighbor_grow(current_point[0], current_point[1]-1, current_point[2],i)) ;
+				//	if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]+1,i)) ;
+				//	if (check_neighbor_grow(current_point[0], current_point[1], current_point[2]-1,i)) ;
+				}
+				mylist.get(i).clear();
+				mylist.get(i).addAll(current_list);
+				masterlist.get(i).addAll(current_list);
+			}
+		}
+	}
 	public void clean_fences(short [] input, int w, int h, int d)
 	{
 		for (int i=0; i<w*h*d; i++) 
