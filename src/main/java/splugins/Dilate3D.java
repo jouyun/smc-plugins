@@ -116,6 +116,26 @@ public class Dilate3D {
 		return pix;
 	}
 	
+	public static float [][][] make_3D_float_3D(ImagePlus img, int cur_channel, int cur_frame)
+	{
+		int width=img.getWidth();
+		int height=img.getHeight();
+		int depth=img.getNSlices();
+		float [][][] pix=new float[width][height][depth];
+		for (int i=0; i<depth; i++)
+		{
+			float [] tmp=(float [])img.getStack().getProcessor(cur_channel+i*img.getNChannels()+cur_frame*img.getNChannels()*depth+1).getPixels();
+			for (int x=0; x<width; x++)
+			{
+				for (int y=0; y<height; y++)
+				{
+					pix[x][y][i]=tmp[x+y*width];
+				}
+			}
+		}
+		return pix;
+	}
+	
 	public static byte [] make_3D_byte(ImagePlus img, int cur_channel, int cur_frame)
 	{
 		int width=img.getWidth();
@@ -145,4 +165,36 @@ public class Dilate3D {
 		return new_img;
 	}
 
+	public static ImagePlus make_3D_ImagePlusByte3D(byte [][][] pix, int width, int height, int depth)
+	{
+		ImagePlus new_img=NewImage.createByteImage("Dilated", width, height, depth, NewImage.FILL_BLACK);
+		for (int i=0; i<depth; i++)
+		{
+			byte [] tmp=(byte [])new_img.getStack().getProcessor(i+1).getPixels();
+			for (int x=0; x<width; x++)
+			{
+				for (int y=0; y<height; y++)
+				{
+					tmp[x+y*width]=pix[x][y][i];
+				}
+			}
+		}
+		return new_img;
+	}
+	public static ImagePlus make_3D_ImagePlusFloat3D(float [][][] pix, int width, int height, int depth)
+	{
+		ImagePlus new_img=NewImage.createFloatImage("Dilated", width, height, depth, NewImage.FILL_BLACK);
+		for (int i=0; i<depth; i++)
+		{
+			float [] tmp=(float [])new_img.getStack().getProcessor(i+1).getPixels();
+			for (int x=0; x<width; x++)
+			{
+				for (int y=0; y<height; y++)
+				{
+					tmp[x+y*width]=pix[x][y][i];
+				}
+			}
+		}
+		return new_img;
+	}
 }

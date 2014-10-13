@@ -71,15 +71,29 @@ public class Rolling_Time_Subtract implements PlugIn {
 		ImagePlus img=WindowManager.getCurrentImage();
 		GenericDialog gd = new GenericDialog("Title");
 		
-		gd.addNumericField("How big of a window:  ", 5, 1);
+		gd.addNumericField("How big of a window:  ", 5, 0);
+		gd.addCheckbox("Truncate negatives? ", false);
 		gd.showDialog();
 		
 		int window =(int)gd.getNextNumber(); 
+		boolean truncate=gd.getNextBoolean();
 		
-		ImagePlus new_img=DoSubtract(img, window);
+		ImagePlus new_img=DoSubtract(img, window, truncate);
 		
 		new_img.updateAndDraw();
 		new_img.show();
+	}
+	public static ImagePlus DoSubtract(ImagePlus img, int window, boolean truncate)
+	{
+		ImagePlus my_img=DoSubtract(img, window);
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getStackSize();
+		//Now subtract old from new and put in new_img
+		for (int i=window; i<slices; i++)
+		{
+			float [] new_pix=(float [])my_img.getStack().getPixels(i);
+			for (int k=0; k<width*height; k++) if (new_pix[k]<0) new_pix[k]=0;
+		}
+		return my_img;
 	}
 	/**********************************************************************
 	 * DoSubtract- Subtracts a box car average of time series
