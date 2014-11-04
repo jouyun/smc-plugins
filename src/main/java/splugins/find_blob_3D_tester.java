@@ -160,10 +160,10 @@ public class find_blob_3D_tester implements PlugIn {
 			
 			if (img.getNChannels()>1)
 			{
-				//if (averages[0]/averages[cur_channel]<selection_criteria) continue;
+				if (averages[0]/averages[cur_channel]<selection_criteria) continue;
 				//if (expanded_averages[0]<(minmax[1]-minmax[0])*selection_criteria+minmax[0]||expanded_averages[0]>(minmax[1]-minmax[0])*0.4+minmax[0]) continue;
 				//if (expanded_averages[0]<(minmax[1]-minmax[0])*selection_criteria+minmax[0]) continue;
-				if (expanded_averages[0]<minmax[2]*selection_criteria+minmax[0]) continue;
+				//if (expanded_averages[0]<minmax[2]*selection_criteria+minmax[0]) continue;
 			}
 			the_table.incrementCounter();
 			the_table.addValue("Volume", (double)current_list.size());

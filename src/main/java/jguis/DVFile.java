@@ -11,7 +11,7 @@ package jguis;
 import java.io.*;
 import java.lang.Float;
 
-/* DeltaVision File Opener by Fabrice Cordelières  & Sebastien HUART
+/* DeltaVision File Opener by Fabrice Cordeli& Sebastien HUART
  Institut Curie
  UMR146
  ORSAY

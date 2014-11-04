@@ -6,9 +6,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>sc.fiji</groupId>
-		<artifactId>pom-fiji</artifactId>
-		<version>2.0.0-beta-1-SNAPSHOT</version>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>1.135</version>
 		<relativePath />
 	</parent>
 
@@ -27,6 +27,7 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
+			<version>1.49i</version>
 		</dependency>
 		<dependency>
 			<groupId>org.freehep</groupId>
@@ -51,35 +52,8 @@
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
-			<artifactId>fiji-lib</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
 			<artifactId>imagescience</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>TrackMate_</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-meta</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.jgrapht</groupId>
-			<artifactId>jgrapht</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jdom</groupId>
-			<artifactId>jdom2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-common</artifactId>
+			<version>2.4.2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
