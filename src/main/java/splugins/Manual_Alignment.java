@@ -129,6 +129,7 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 		int keyCode = e.getKeyCode();
         char keyChar = e.getKeyChar();
         int flags = e.getModifiers();
+        boolean shift_down=e.isShiftDown();
         //IJ.log("keyPressed: keyCode=" + keyCode + " (" + KeyEvent.getKeyText(keyCode) + ")");
         //IJ.log("char: "+keyChar);
         if (keyChar=='n') 
@@ -233,9 +234,10 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		myimg.updateAndDraw();
         }
 
-        if (keyChar=='s') 
+        if (keyChar=='s'||keyChar=='S') 
         {
-        	myimg.getProcessor().translate(0,xy_step);
+        	if (shift_down) myimg.getProcessor().translate(0,10*xy_step);
+        	else myimg.getProcessor().translate(0,xy_step);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -243,9 +245,10 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
     		myimg.updateAndDraw();
         }
-        if (keyChar=='w') 
+        if (keyChar=='w'||keyChar=='W') 
         {
-        	myimg.getProcessor().translate(0,-xy_step);
+        	if (shift_down) myimg.getProcessor().translate(0,-xy_step*10); 
+        	else myimg.getProcessor().translate(0,-xy_step);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -253,9 +256,10 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
     		myimg.updateAndDraw();
         }
-        if (keyChar=='d') 
+        if (keyChar=='d'||keyChar=='D') 
         {
-        	myimg.getProcessor().translate(xy_step, 0);
+        	if (shift_down) myimg.getProcessor().translate(10*xy_step, 0);
+        	else myimg.getProcessor().translate(xy_step, 0);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -263,9 +267,10 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
     		myimg.updateAndDraw();
         }
-        if (keyChar=='a') 
+        if (keyChar=='a'||keyChar=='A') 
         {
-        	myimg.getProcessor().translate(-xy_step,0);
+        	if (shift_down) myimg.getProcessor().translate(-xy_step*10,0);
+        	else myimg.getProcessor().translate(-xy_step,0);
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
