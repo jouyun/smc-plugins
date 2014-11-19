@@ -69,7 +69,7 @@ public class Topography_Mapper implements PlugIn {
 					img_data[counter+i*512]=(float)elevation;
 					counter++;	
 				}
-				IJ.wait(50);
+				IJ.wait(150);
 			}
 			for (int i=0; i<512*512; i++)
 			{

@@ -65,7 +65,9 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 		base_pix=(float []) ipi.getPixels();
 		original_pix=new float [width*height];
 		last_pix=new float [width*height];
-		
+		total_x=0;
+		total_y=0;
+		total_rotation=0;
 		for (int i=0; i<width*height; i++)
 		{
 			original_pix[i]=pixf[i];
@@ -82,7 +84,9 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
 		base_pix=(float []) ipi.getPixels();
 		original_pix=new float [width*height];
 		last_pix=new float [width*height];
-		
+		total_x=0;
+		total_y=0;
+		total_rotation=0;
 		for (int i=0; i<width*height; i++)
 		{
 			original_pix[i]=pixf[i];
@@ -162,17 +166,17 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         if (!adjust_mode) return;
         
 		ImageProcessor ipf=myimg.getProcessor();
-		ImageProcessor ipi=myimg.getStack().getProcessor(myimg.getCurrentSlice()-1);
 		float [] pixf=(float []) ipf.getPixels();
         for (int i=0; i<width*height; i++)
         {
         	pixf[i]=last_pix[i];
         }
 
-        if (keyChar=='z') 
+        if (keyChar=='z'||keyChar=='Z') 
         {
         	myimg.getProcessor().setInterpolationMethod(2);
-        	total_rotation+=-rotation_step;
+        	if (shift_down) total_rotation+=(-rotation_step*.1);
+        	else total_rotation+=-rotation_step;
         	for (int i=0; i<width*height; i++)
             {
             	pixf[i]=original_pix[i];
@@ -185,10 +189,11 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
     		myimg.updateAndDraw();
         }
-        if (keyChar=='v') 
+        if (keyChar=='v'||keyChar=='V') 
         {
         	myimg.getProcessor().setInterpolationMethod(2);
-        	total_rotation+=rotation_step;
+        	if (shift_down) total_rotation+=(.1*rotation_step);
+        	else total_rotation+=rotation_step;
         	for (int i=0; i<width*height; i++)
             {
             	pixf[i]=original_pix[i];
@@ -238,6 +243,8 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         {
         	if (shift_down) myimg.getProcessor().translate(0,10*xy_step);
         	else myimg.getProcessor().translate(0,xy_step);
+        	if (shift_down) total_y+=10*xy_step;
+        	else total_y+=xy_step;
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -249,6 +256,8 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         {
         	if (shift_down) myimg.getProcessor().translate(0,-xy_step*10); 
         	else myimg.getProcessor().translate(0,-xy_step);
+        	if (shift_down) total_y-=10*xy_step;
+        	else total_y-=xy_step;
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -260,6 +269,8 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         {
         	if (shift_down) myimg.getProcessor().translate(10*xy_step, 0);
         	else myimg.getProcessor().translate(xy_step, 0);
+        	if (shift_down) total_x+=(10*xy_step);
+        	else total_x+=xy_step;
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -271,6 +282,8 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         {
         	if (shift_down) myimg.getProcessor().translate(-xy_step*10,0);
         	else myimg.getProcessor().translate(-xy_step,0);
+        	if (shift_down) total_x=total_x-(10*xy_step);
+        	else total_x=total_x-xy_step;
         	for (int i=0; i<width*height; i++)
     		{
     			last_pix[i]=pixf[i];
@@ -286,11 +299,16 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
     		}
         	adjust_mode=false;
     		myimg.updateAndDraw();
+    		IJ.log("Slice "+myimg.getCurrentSlice()+" was rotated "+(-total_rotation)+" shifted "+ total_x+"pixels in x and "+(-total_y)+"pixels in y");
     		total_rotation=0;
+    		total_x=0;
+    		total_y=0;
         }
         if (keyChar=='r') 
         {
         	total_rotation=0;
+        	total_x=0;
+        	total_y=0;
         	for (int i=0; i<width*height; i++)
     		{
         		last_pix[i]=original_pix[i];
