@@ -77,8 +77,12 @@ public class Rolling_Time_Subtract implements PlugIn {
 		
 		int window =(int)gd.getNextNumber(); 
 		boolean truncate=gd.getNextBoolean();
-		
-		ImagePlus new_img=DoSubtract(img, window, truncate);
+		ImagePlus new_img;
+		if (img.getNChannels()>1) 
+		{
+			new_img=DoStackSubtract(img, window);
+		}
+		else new_img=DoSubtract(img, window, truncate);
 		
 		new_img.updateAndDraw();
 		new_img.show();
@@ -123,6 +127,37 @@ public class Rolling_Time_Subtract implements PlugIn {
 			float [] new_pix=(float [])new_img.getStack().getPixels(i);
 			float [] old_pix=(float [])img.getStack().getPixels(i);
 			for (int k=0; k<width*height; k++) new_pix[k]= ((float)old_pix[k]-new_pix[k]);
+		}
+		return new_img;
+	}
+	
+	public static ImagePlus DoStackSubtract(ImagePlus img, int window)
+	{
+		int channels=img.getNChannels(), slices=img.getNSlices(), frames=img.getNFrames(), channel=img.getChannel()-1, frame=img.getFrame()-1, slice=img.getSlice()-1;
+		int width=img.getWidth();
+		int height=img.getHeight();
+		ImagePlus new_img=NewImage.createFloatImage("Result", width, height, frames*channels*slices, NewImage.FILL_BLACK);
+		for (int s=0; s<slices; s++)
+		{
+			for (int c=0; c<channels; c++)
+			{
+				for (int f=window; f<frames; f++)
+				{
+					float [] new_pix=(float [])new_img.getStack().getPixels(1+c+s*channels+f*channels*slices);
+					for (int j=0; j<window; j++)
+					{
+						float [] old_pix=(float [])img.getStack().getPixels(1+c+s*channels+(f-j)*channels*slices);
+						for (int k=0; k<width*height; k++) new_pix[k]=new_pix[k]+(float)old_pix[k];
+					}
+					for (int k=0; k<width*height; k++) new_pix[k]=(new_pix[k]/(float)window);
+				}
+				for (int f=window; f<slices; f++)
+				{
+					float [] new_pix=(float [])new_img.getStack().getPixels(1+c+s*channels+f*channels*slices);
+					float [] old_pix=(float [])img.getStack().getPixels(1+c+s*channels+f*channels*slices);
+					for (int k=0; k<width*height; k++) new_pix[k]= ((float)old_pix[k]-new_pix[k]);
+				}
+			}
 		}
 		return new_img;
 	}
