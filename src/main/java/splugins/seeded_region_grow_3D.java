@@ -64,6 +64,8 @@ import java.lang.reflect.Method;
 import java.util.Stack;
 import ij.plugin.PlugIn;
 
+//This only works on binary images, it grows from the seed of the currently selected ROI when run OR
+//lets you draw an ROI after run, then press 'c' to get all pixels attached to that pixel
 
 public class seeded_region_grow_3D implements PlugIn,MouseListener, KeyListener, Measurements {
 

@@ -6,8 +6,12 @@ import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+import ij.gui.Roi;
+import ij.gui.Toolbar;
 import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
+import ij.plugin.filter.PlugInFilter;
+import ij.process.ImageProcessor;
 
 import java.awt.Point;
 import java.awt.event.MouseEvent;
@@ -16,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Stack;
 
 /******************************************************************
@@ -33,7 +38,7 @@ import java.util.Stack;
  *  		control clicking deletes the last entry of the results table and reinstates the value for the two images
  */
 
-public class Manual_Tracker implements PlugIn,MouseListener {
+public class Manual_Tracker implements PlugInFilter,MouseListener {
 	ImagePlus imp, z_imp;
 	int width;
 	int height;
@@ -64,51 +69,22 @@ public class Manual_Tracker implements PlugIn,MouseListener {
 		}
 	}
 	@Override
-	public void run(String arg0) {
-		imp=WindowManager.getCurrentImage();
-        
-        final ImagePlus[] admissibleImageList = createAdmissibleImageList();
-		final String[] sourceNames = new String[admissibleImageList.length];	
-		if (admissibleImageList.length == 0) return;
-		for (int k = 0; (k < admissibleImageList.length); k++) 
-		{
-			sourceNames[k]=admissibleImageList[k].getTitle();
-		}
-		GenericDialog gd = new GenericDialog("Do Dot Product");
-		gd.addChoice("Z stack:", sourceNames, admissibleImageList[0].getTitle());
-		gd.addNumericField("Clicks until auto-advance", 2, 0);
-		gd.showDialog();
-		if (gd.wasCanceled()) 
-		{
-			return;
-		}
-		
-		int tmpIndex=gd.getNextChoiceIndex();
-		auto_advance=(int) gd.getNextNumber();
-		z_imp=admissibleImageList[tmpIndex];
-
-		width=imp.getWidth(); 
-		height=imp.getHeight();
-		slices=imp.getNSlices();
-		frames=imp.getNFrames();
-		z_slices=z_imp.getNSlices();
-		channels=imp.getNChannels();
-		cur_slice=imp.getSlice()-1;
-		cur_frame=imp.getFrame()-1;
-		cur_channel=imp.getChannel()-1;
-		lateral_res=(float) imp.getCalibration().pixelHeight;
-		axial_res=(float) imp.getCalibration().pixelDepth;
-		win = imp.getWindow();
-        win.addWindowListener(win);
-        canvas = win.getCanvas();
-        canvas.addMouseListener(this);
-        counter=0;
-        
-        rslt=ResultsTable.getResultsTable();
+	public void mouseClicked(MouseEvent e) {
 		
 	}
 	@Override
-	public void mouseClicked(MouseEvent e) {
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void mousePressed(MouseEvent e) {
+		imp.setRoi((Roi)null);
 		cur_slice=imp.getSlice()-1;
 		cur_frame=imp.getFrame()-1;
 		cur_channel=imp.getChannel()-1;
@@ -191,27 +167,52 @@ public class Manual_Tracker implements PlugIn,MouseListener {
 			int cm_y=Math.round(cm_y_sum/sort_total);
 			
 			//Now find the z center of mass at that spot from the z reference image, HARDCODING FOR CHANNEL 1
-			List<MyPoint> myz_collection=new ArrayList<MyPoint>();
-			cur_channel=0;
-			for (int s=0; s<z_slices; s++)
+			//If the base image is a projection, then find the best z
+			if (slices==1)
 			{
-				float [] tmp=(float []) z_imp.getStack().getProcessor(cur_channel+s*channels+cur_frame*z_slices*channels+1).convertToFloat().getPixels();
-				myz_collection.add(new MyPoint(s,0,tmp[cm_x+cm_y*width]));
-			}
-			Collections.sort(myz_collection, new Comparator<MyPoint>()
-					{
-						public int compare(MyPoint A, MyPoint B)
+				IJ.log("Using projection");
+				List<MyPoint> myz_collection=new ArrayList<MyPoint>();
+				cur_channel=0;
+				for (int s=0; s<z_slices; s++)
+				{
+					float [] tmp=(float []) z_imp.getStack().getProcessor(cur_channel+s*channels+cur_frame*z_slices*channels+1).convertToFloat().getPixels();
+					myz_collection.add(new MyPoint(s,0,tmp[cm_x+cm_y*width]));
+				}
+				Collections.sort(myz_collection, new Comparator<MyPoint>()
 						{
-							return Float.compare(B.sort_val, A.sort_val);
-						}
-					});
-			int z_slices_to_keep=3;
-			for (int i=0; i<z_slices_to_keep; i++)
-			{
-				MyPoint tmp=myz_collection.get(i);
-				cm_z_sum=cm_z_sum+tmp.x*tmp.sort_val;
-				z_sort_total+=tmp.sort_val;
+							public int compare(MyPoint A, MyPoint B)
+							{
+								return Float.compare(B.sort_val, A.sort_val);
+							}
+						});
+				int z_slices_to_keep=3;
+				for (int i=0; i<z_slices_to_keep; i++)
+				{
+					MyPoint tmp=myz_collection.get(i);
+					cm_z_sum=cm_z_sum+tmp.x*tmp.sort_val;
+					z_sort_total+=tmp.sort_val;
+				}
 			}
+			else
+			{
+				IJ.log("Not using projection");
+				List<MyPoint> myz_collection=new ArrayList<MyPoint>();
+				cur_channel=0;
+				int my_slice=imp.getSlice();
+				for (int s=0; s<z_slices; s++)
+				{
+					float [] tmp=(float []) z_imp.getStack().getProcessor(cur_channel+s*channels+cur_frame*z_slices*channels+1).convertToFloat().getPixels();
+					if (s+1==my_slice||s==my_slice||s-1==my_slice) myz_collection.add(new MyPoint(s,0,tmp[cm_x+cm_y*width]));
+				}
+				int z_slices_to_keep=3;
+				for (int i=0; i<myz_collection.size(); i++)
+				{
+					MyPoint tmp=myz_collection.get(i);
+					cm_z_sum=cm_z_sum+tmp.x*tmp.sort_val;
+					z_sort_total+=tmp.sort_val;
+				}
+			}
+				
 			
 			int cm_z=Math.round(cm_z_sum/z_sort_total);
 			byte [] tmp=(byte []) z_imp.getStack().getProcessor(cur_channel+cm_z*channels+cur_frame*z_slices*channels+1).getPixels();
@@ -239,21 +240,6 @@ public class Manual_Tracker implements PlugIn,MouseListener {
 			imp.updateAndDraw();
 			z_imp.updateAndDraw();
 		}
-		
-	}
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 	@Override
@@ -287,5 +273,112 @@ public class Manual_Tracker implements PlugIn,MouseListener {
 		}
 		return(admissibleImageList);
 	} /* end createAdmissibleImageList */
+	@Override
+	public void run(ImageProcessor arg0) {
+		imp=WindowManager.getCurrentImage();
+        
+        final ImagePlus[] admissibleImageList = createAdmissibleImageList();
+		final String[] sourceNames = new String[admissibleImageList.length];	
+		if (admissibleImageList.length == 0) return;
+		for (int k = 0; (k < admissibleImageList.length); k++) 
+		{
+			sourceNames[k]=admissibleImageList[k].getTitle();
+		}
+		GenericDialog gd = new GenericDialog("Do Dot Product");
+		gd.addChoice("Z stack:", sourceNames, admissibleImageList[0].getTitle());
+		gd.addNumericField("Clicks until auto-advance", 2, 0);
+		gd.showDialog();
+		if (gd.wasCanceled()) 
+		{
+			return;
+		}
+		
+		int tmpIndex=gd.getNextChoiceIndex();
+		auto_advance=(int) gd.getNextNumber();
+		z_imp=admissibleImageList[tmpIndex];
+
+		width=imp.getWidth(); 
+		height=imp.getHeight();
+		slices=imp.getNSlices();
+		frames=imp.getNFrames();
+		z_slices=z_imp.getNSlices();
+		channels=imp.getNChannels();
+		cur_slice=imp.getSlice()-1;
+		cur_frame=imp.getFrame()-1;
+		cur_channel=imp.getChannel()-1;
+		lateral_res=(float) imp.getCalibration().pixelHeight;
+		axial_res=(float) imp.getCalibration().pixelDepth;
+		win = imp.getWindow();
+        //win.addWindowListener(win);
+        canvas = win.getCanvas();
+        //win.removeKeyListener(IJ.getInstance());
+        //canvas.removeMouseListener(IJ.getInstance());
+        //win.removeMouseListener(IJ.getInstance());
+        if (Toolbar.getToolId()>Toolbar.CROSSHAIR) IJ.setTool(Toolbar.RECTANGLE);
+        canvas.addMouseListener(this);
+        //win.addMouseListener(this);
+        counter=0;
+        
+        
+        rslt=ResultsTable.getResultsTable();
+	
+	}
+	//This will sort collections of data, pivoting on the first column and moving the others with it
+	public static void vector_sort(double [][] data, boolean descending)
+	{
+		class VecPoint
+		{
+			double data[];
+			VecPoint()
+			{
+			}
+			VecPoint(double [] inp)
+			{
+				data=new double [inp.length];
+				System.arraycopy(inp, 0, data, 0, inp.length);
+			}
+		}
+		
+		List<VecPoint> my_collection=new ArrayList<VecPoint>();
+		for (int i=0; i<data.length; i++)
+		{
+			VecPoint temp_point=new VecPoint(data[i]);
+			my_collection.add(temp_point);
+		}
+		if (descending)
+		{
+			Collections.sort(my_collection, new Comparator<VecPoint>()
+			{
+				public int compare(VecPoint A, VecPoint B)
+				{
+					return Double.compare(B.data[0], A.data[0]);
+				}
+			});
+		}
+		else
+		{
+			Collections.sort(my_collection, new Comparator<VecPoint>()
+			{
+				public int compare(VecPoint A, VecPoint B)
+				{
+					return Double.compare(A.data[0], B.data[0]);
+				}
+			});
+			
+		}
+		int i=0;
+		for (ListIterator jF=my_collection.listIterator();jF.hasNext();)
+		{
+			VecPoint curpt=(VecPoint)jF.next();
+			System.arraycopy(curpt.data, 0, data[i], 0, curpt.data.length);
+			i++;
+		}
+	}
+	@Override
+	public int setup(String arg0, ImagePlus arg1) {
+		this.imp=arg1;
+		IJ.register(Manual_Tracker.class);
+		return DOES_ALL+NO_CHANGES;
+	}
 
 }

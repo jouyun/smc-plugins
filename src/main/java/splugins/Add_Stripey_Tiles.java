@@ -68,6 +68,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Stack;
 
+//*********************NOT IN USE***************************
+
 public class Add_Stripey_Tiles implements PlugIn{
 	public void run(String arg) {
 		ImagePlus img;

@@ -3,6 +3,8 @@ package splugins;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.gui.NewImage;
 import ij.gui.Plot;
 import ij.plugin.PlugIn;
 
@@ -17,16 +19,41 @@ public class Profile_Z_Information implements PlugIn {
 		int height=img.getHeight();
 		float [] data=new float[slices];
 		float [] labels=new float[slices];
-		for (int z=0; z<slices; z++)
+		GenericDialog gd=new GenericDialog("Process what");
+		gd.addCheckbox("Process stack?", false);
+		gd.showDialog();
+		boolean process_stack=gd.getNextBoolean();
+		
+		if (!process_stack)
 		{
-			float [] pix=(float [])(img.getStack().getProcessor(channel+z*channels+frame*channels*slices+1).convertToFloat().getPixels());
-			data[z]=(float) (calculate_auto_corr(pix, pix, width, height, 1)-calculate_auto_corr(pix, pix, width, height, 2));
-			labels[z]=z+1;
-			IJ.log("Slice "+z+": "+data[z]);
+			for (int z=0; z<slices; z++)
+			{
+				float [] pix=(float [])(img.getStack().getProcessor(channel+z*channels+frame*channels*slices+1).convertToFloat().getPixels());
+				data[z]=(float) (calculate_auto_corr(pix, pix, width, height, 1)-calculate_auto_corr(pix, pix, width, height, 2));
+				labels[z]=z+1;
+				IJ.log("Slice "+z+": "+data[z]);
+			}
+						
+			Plot plot=new Plot("My plot", "X", "Y", labels, data);
+			plot.show();
 		}
-					
-		Plot plot=new Plot("My plot", "X", "Y", labels, data);
-		plot.show();
+		else
+		{
+			ImagePlus new_imp=NewImage.createFloatImage("Img", slices, frames, 1, NewImage.FILL_BLACK);
+			float [] new_pix=(float []) new_imp.getProcessor().getPixels();
+			for (int f=0; f<frames; f++)
+			{
+				for (int z=0; z<slices; z++)
+				{
+					float [] pix=(float [])(img.getStack().getProcessor(channel+z*channels+f*channels*slices+1).convertToFloat().getPixels());
+					new_pix[z+f*slices]=(float) (calculate_auto_corr(pix, pix, width, height, 1)-calculate_auto_corr(pix, pix, width, height, 2));
+					labels[z]=z+1;
+					IJ.log("Slice "+z+": "+data[z]);
+				}
+			}
+			new_imp.show();
+			new_imp.updateAndDraw();
+		}
 
 
 	}
