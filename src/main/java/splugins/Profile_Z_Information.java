@@ -1,5 +1,10 @@
 package splugins;
 
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.analysis.UnivariateRealFunction;
+import org.apache.commons.math.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math.analysis.interpolation.UnivariateRealInterpolator;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
@@ -20,7 +25,7 @@ public class Profile_Z_Information implements PlugIn {
 		float [] data=new float[slices];
 		float [] labels=new float[slices];
 		GenericDialog gd=new GenericDialog("Process what");
-		gd.addCheckbox("Process stack?", false);
+		gd.addCheckbox("Process all frames?", false);
 		gd.showDialog();
 		boolean process_stack=gd.getNextBoolean();
 		
@@ -55,6 +60,8 @@ public class Profile_Z_Information implements PlugIn {
 			new_imp.updateAndDraw();
 		}
 
+		
+		
 
 	}
 	

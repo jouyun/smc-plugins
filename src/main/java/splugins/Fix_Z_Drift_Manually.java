@@ -4,12 +4,18 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.util.Stack;
 
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.analysis.UnivariateRealFunction;
+import org.apache.commons.math.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math.analysis.interpolation.UnivariateRealInterpolator;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.Line;
 import ij.gui.NewImage;
+import ij.gui.Plot;
 import ij.gui.Roi;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
@@ -164,6 +170,33 @@ public class Fix_Z_Drift_Manually implements PlugIn {
 		}
 		return wy;
 	}
+	/*********************Here is an alternative using apache commons*********************************
+	 * 
+	 * 
+	 * @return
+	 */
+	
+	/*double x[]={1, 2, 3, 4, 5};
+	double y[]= {1, 2, 3, 2, 1};
+	UnivariateRealInterpolator interpolator=new SplineInterpolator();
+	try {
+		UnivariateRealFunction function=interpolator.interpolate(x, y);
+		float [] x_data=new float[100];
+		float [] y_data=new float[100];
+		for (int i=0; i<100; i++)
+		{
+			x_data[i]=0.0f+4.0f/100.0f*i;
+			y_data[i]=(float) function.value(x_data[i]);
+			IJ.log("X,Y: "+x_data[i]+","+y_data[i]);
+		}
+		Plot myplot=new Plot("Interp", "X", "Y", x_data, y_data);
+		myplot.show();
+	} catch (MathException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		IJ.log("Poop!");
+	}
+	if (x[0]==1) return;*/
 	
 	private ImagePlus[] createAdmissibleImageList () 
 	{
