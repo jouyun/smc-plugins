@@ -27,6 +27,18 @@ public class Fix_Z_Drift_Manually implements PlugIn {
 	@Override
 	public void run(String arg0) {
 		// TODO Auto-generated method stub
+		/*double [][] autos={{6359.502280000001,3563.7669800000003,321.02500000000003}, {9400.41364,1536.4927400000006,324.20000000000005},
+				{4839.0466000000015,5084.22266,317.82500000000005}, {7879.95796,2043.3113000000012,324.20000000000005},
+				{3825.4094800000007,6604.67834,313.875}, {10414.050760000002,16.037060000000565,326.175}};
+		
+		IJ.log(""+linear_extrapolate_interpolate_plane(autos, 4332,5084));
+		
+		if (autos[0][0]>-1) return;*/
+		
+		
+		
+		
+		//Move this back up when done
 		ImagePlus imp;
 		int width, height, slices, frames, channels, cur_slice, cur_frame, cur_channel;
 		imp=WindowManager.getCurrentImage();
@@ -197,6 +209,78 @@ public class Fix_Z_Drift_Manually implements PlugIn {
 		IJ.log("Poop!");
 	}
 	if (x[0]==1) return;*/
+	public static double linear_extrapolate_interpolate_plane(double [][] kpts, double x, double y)
+	{
+		double [][] sort_me=new double[kpts.length][4];
+		for (int i=0; i<kpts.length; i++)
+		{
+			sort_me[i][1]=kpts[i][0];
+			sort_me[i][2]=kpts[i][1];
+			sort_me[i][3]=kpts[i][2];
+			sort_me[i][0]=(sort_me[i][1]-x)*(sort_me[i][1]-x)+(sort_me[i][2]-y)*(sort_me[i][2]-y);
+		}
+		Manual_Tracker.vector_sort(sort_me,  false);
+		
+		double [] A={sort_me[0][1], sort_me[0][2], sort_me[0][3]};
+		double [] B={sort_me[1][1], sort_me[1][2], sort_me[1][3]};
+		double [] C={sort_me[2][1], sort_me[2][2], sort_me[2][3]};
+		
+		IJ.log("A: "+A[0]+","+A[1]+","+A[2]);
+		IJ.log("B: "+B[0]+","+B[1]+","+B[2]);
+		IJ.log("C: "+C[0]+","+C[1]+","+C[2]);
+		
+		double [] AB={B[0]-A[0], B[1]-A[1], B[2]-A[2]};
+		double [] AC={C[0]-A[0], C[1]-A[1], C[2]-A[2]};
+		
+		IJ.log("AB: "+AB[0]+","+AB[1]+","+AB[2]);
+		IJ.log("AC: "+AC[0]+","+AC[1]+","+AC[2]);
+		
+		
+		double [] cross={AB[1]*AC[2]-AB[2]*AC[1], AB[2]*AC[0]-AB[0]*AC[2], AB[0]*AC[1]-AB[1]*AC[0]};
+		
+		IJ.log("cross: "+cross[0]+","+cross[1]+","+cross[2]);
+		
+		double rtn=-1E100;
+		
+		if (Math.abs(cross[0])<.1||Math.abs(cross[1])<.1||Math.abs(cross[2])<.1) 
+		{
+			IJ.log("Well *** happened, you got a null cross, guess you will have to fix that");
+			double [][] line_pts={{sort_me[0][1], sort_me[0][2], sort_me[0][3]}, {sort_me[1][1], sort_me[1][2], sort_me[1][3]}};
+			rtn=linear_extrapolate_interpolate_line(line_pts, x, y);
+		}
+		else
+		{
+			rtn=(cross[0]*(x-A[0])+cross[1]*(y-A[1]))/-cross[2]+A[2];
+		}
+		
+		return rtn;
+	}
+	
+	public static double linear_extrapolate_interpolate_line(double [][] kpts, double x, double y)
+	{
+		double zA=kpts[0][2];
+		double zB=kpts[1][2];
+		double [] A={kpts[0][0], kpts[0][1]};
+		double [] B={kpts[1][0], kpts[1][1]};
+		double [] C={x, y};
+		
+		IJ.log("A: "+A[0]+","+A[1]);
+		IJ.log("B: "+B[0]+","+B[1]);
+		IJ.log("C: "+C[0]+","+C[1]);
+		
+		double []AB={B[0]-A[0], B[1]-A[1]};
+		double []AC={C[0]-A[0], C[1]-A[1]};
+		
+		IJ.log("AB: "+AB[0]+","+AB[1]);
+		IJ.log("AC: "+AC[0]+","+AC[1]);
+		
+		double dot=AB[0]*AC[0]+AB[1]*AC[1];
+		dot=dot/(AB[0]*AB[0]+AB[1]*AB[1]);
+		
+		double rtn=dot*(zB-zA)+zA;
+
+		return rtn;
+	}
 	
 	private ImagePlus[] createAdmissibleImageList () 
 	{

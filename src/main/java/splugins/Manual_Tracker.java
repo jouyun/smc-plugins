@@ -324,7 +324,7 @@ public class Manual_Tracker implements PlugInFilter,MouseListener {
 	
 	}
 	//This will sort collections of data, pivoting on the first column and moving the others with it
-	public static void vector_sort(double [][] data, boolean descending)
+	public static void vector_sort(double [][] data, boolean ascending)
 	{
 		class VecPoint
 		{
@@ -345,7 +345,7 @@ public class Manual_Tracker implements PlugInFilter,MouseListener {
 			VecPoint temp_point=new VecPoint(data[i]);
 			my_collection.add(temp_point);
 		}
-		if (descending)
+		if (ascending)
 		{
 			Collections.sort(my_collection, new Comparator<VecPoint>()
 			{
