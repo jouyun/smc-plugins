@@ -63,13 +63,13 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		ImagePlus img=WindowManager.getCurrentImage();
 		
 		GenericDialog gd = new GenericDialog("Merge Tiled Objects");
-		gd.addNumericField("SNR of hit pixels:  ", 12, 1);
-		gd.addNumericField("Hit pixels required for image:  ", 200, 1);
+		gd.addNumericField("SNR of hit pixels:  ", 15, 1);
+		gd.addNumericField("Hit pixels required for image:  ", 10000, 1);
 		gd.addNumericField("Border size in pixels:  ", 100, 1);
-		gd.addNumericField("In border pixels required:  ", 10, 1);
-		gd.addNumericField("X tiles:  ", 3, 0);
-		gd.addNumericField("Y tiles:  ", 3, 0);
-		gd.addStringField("Path to save to:  ", "C:\\Data\\For Beth\\dummy\\");
+		gd.addNumericField("In border pixels required:  ", 100, 1);
+		gd.addNumericField("X tiles:  ", 6, 0);
+		gd.addNumericField("Y tiles:  ", 5, 0);
+		gd.addStringField("Path to save to:  ", "/home/smc/Data/LCC/H3Pquantification_p53_zfp1_RNAi_20141214/set2/p53-d12/tmp/");
 		gd.showDialog();
 		
 		float sigma_ratio=(float)gd.getNextNumber(); 
@@ -88,7 +88,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		for (int j=0; j<the_list.size(); j++)
 		{
 			try {
-				FileOutputStream fos=new FileOutputStream("/home/smc/fast/tmp/out.txt");
+				FileOutputStream fos=new FileOutputStream(save_directory+"out.txt");
 				Writer w= new BufferedWriter(new OutputStreamWriter(fos));
 				w.write("# Define the number of dimensions we are working on\n");
 				w.write("dim = 2\n\n# Define the image coordinates\n");
@@ -97,11 +97,13 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				{
 					int [] idc=get_index(my_list[i], x_tiles, y_tiles);
 					IJ.log("idx: "+my_list[i]+" x: "+idc[0]+" y: "+idc[1]);
-					w.write("Img"+String.format("%04d", my_list[i])+".tif; ; ("+(idc[0]*(width*0.8))+", "+((y_tiles-idc[1]-1)*(height*0.8))+")\n");
+					w.write("Tiffs"+String.format("%04d", my_list[i])+".tif; ; ("+(idc[0]*(width*0.8))+", "+((y_tiles-idc[1]-1)*(height*0.8))+")\n");
 				}
 				w.flush();
 				w.close();
-				IJ.runMacroFile("Call_From_Plugin_Dummy_Stitch.ijm", "type=[Positions from file] order=[Defined by TileConfiguration] directory=/home/smc/fast/tmp layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+				IJ.runMacroFile("Call_From_Plugin_Dummy_Stitch.ijm", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+				if (WindowManager.getCurrentImage().getTitle().equals("Fused")) WindowManager.getCurrentImage().setTitle("Fused_"+(j+1));
+				//if(j==0) return;
 			}
 			catch (Exception e) {}
 		}
@@ -168,9 +170,13 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				smallest_sq_total=tmp_sq_sum;
 			}
 		}
-		average=smallest_total/(double)(width*height);
-		sigma=Math.sqrt(smallest_sq_total/(float)(width*height)-average*average);
-		//IJ.log("Index:  " + smallest_index + " sigma:  " + sigma);
+		float [] pix=(float [])img.getStack().getProcessor(current_channel+current_slice*channels+channels*slices*smallest_index+1).convertToFloat().getPixels();
+		double[] vals=Percentile_Threshold.find_average_sigma(pix, width, height, 10, sigma_ratio);
+		average=vals[0];
+		sigma=vals[1];
+		//average=smallest_total/(double)(width*height);
+		//sigma=Math.sqrt(smallest_sq_total/(float)(width*height)-average*average);
+		IJ.log("Index:  " + smallest_index + " average: "+average+" sigma:  " + sigma);
 		
 		//*****************************************************
 		//Now mark guys who have hits in them
@@ -184,11 +190,11 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 			{
 				if (current_img[j]-average>sigma_ratio*sigma) current_pixels++;
 			}
-			//IJ.log("Frame " + (i+1) + " had "+current_pixels+" over the threshold");
+			IJ.log("Frame " + (i+1) + " had "+current_pixels+" over the threshold");
 			if (current_pixels>required_pixels) 
 			{
 				state_array[i]=1;
-				////IJ.log("Hit: " + (i+1));
+				IJ.log("Hit: " + (i+1));
 			}
 		}
 		
@@ -197,6 +203,10 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		{
 			float [] current_img=(float [])img.getStack().getProcessor(current_channel+current_slice*channels+channels*slices*i+1).convertToFloat().getPixels();
 			edge_state_array[i]=edge_check(current_img, borderland, minimum_over, average, sigma_ratio, sigma, width, height);
+			
+			int [] xy=get_index(i,x_tiles,y_tiles);
+			IJ.log("Frame,x,y: "+i+","+xy[0]+","+xy[1]);
+			IJ.log("Status: "+edge_state_array[i][0]+","+edge_state_array[i][1]+","+edge_state_array[i][2]+","+edge_state_array[i][3]);
 		}
 		
 		ArrayList <Tissue> Tissue_list=new ArrayList <Tissue>();
@@ -303,12 +313,12 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		{
 			switch (edge_number)
 			{
-				case 0:	rtn=base_index+2*(x_tiles-base_index%x_tiles)-1;
+				case 2:	rtn=base_index+2*(x_tiles-base_index%x_tiles)-1;
 				break;
 				case 1: if ((base_index+1)%x_tiles==0) rtn=-1;
 						else	rtn=base_index+1;
 				break;
-				case 2: if (base_index%x_tiles==0) rtn=-1;
+				case 0: if (base_index%x_tiles==0) rtn=-1;
 						else rtn=base_index-2*(base_index%x_tiles)-1;
 				break;
 				case 3: rtn=base_index-1;
@@ -319,12 +329,12 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		{
 			switch (edge_number)
 			{
-				case 0:	rtn=base_index+2*(x_tiles-base_index%x_tiles)-1;
+				case 2:	rtn=base_index+2*(x_tiles-base_index%x_tiles)-1;
 				break;
 				case 1: if (base_index%x_tiles==0) rtn=-1;
 						else rtn=base_index-1;
 				break;
-				case 2: if ((base_index+1)%x_tiles==0) rtn=-1; 
+				case 0: if ((base_index+1)%x_tiles==0) rtn=-1; 
 						else rtn=base_index-2*(base_index%x_tiles)-1;
 				break;
 				case 3: rtn=base_index+1;
@@ -345,12 +355,12 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		if (right_snake)
 		{
 			rtn[0]=base_index%x_tiles;
-			rtn[1]=(base_index-rtn[0])/x_tiles;
+			rtn[1]=y_tiles-(base_index-rtn[0])/x_tiles-1;
 		}
 		else
 		{
 			rtn[0]=x_tiles-(base_index%x_tiles)-1;
-			rtn[1]=(base_index+rtn[0])/x_tiles;
+			rtn[1]=y_tiles-(base_index+rtn[0])/x_tiles-1;
 		}
 		return rtn;
 	}

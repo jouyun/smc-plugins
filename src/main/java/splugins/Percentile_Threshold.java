@@ -94,6 +94,30 @@ public class Percentile_Threshold implements PlugIn{
 	
 	public static byte [] get_mask(float [] pix, int width, int height, float prctile, float SNR)
 	{
+		
+		
+		double [] tmp=find_average_sigma(pix, width, height, prctile, SNR);
+		double average=tmp[0];
+		double sigma=tmp[1];
+		
+		//ImagePlus new_img=NewImage.createByteImage("Result", (int)width, (int)height, 1, NewImage.FILL_BLACK);
+		
+		//byte [] new_pix=(byte [])new_img.getProcessor().getPixels();
+		byte [] new_pix= new byte [width*height];
+		
+		//IJ.log("Threshold:  "+sigma);
+		//IJ.log("SNR*Threshold:  " +(sigma*SNR));
+		
+		for (int i=0; i<width*height; i++)
+		{
+			if ((double)pix[i]-average<sigma*(double)SNR) continue;
+			new_pix[i]=(byte)255;
+		}
+		return new_pix;
+	}
+	
+	public static double [] find_average_sigma(float [] pix, int width, int height, float prctile, float SNR)
+	{
 		List <Float> stk=new ArrayList<Float>();
 		
 		Random rand=new Random();
@@ -116,21 +140,9 @@ public class Percentile_Threshold implements PlugIn{
 		}
 		average=average/(double)(num_pix);
 		sigma=(double)Math.sqrt(sigma/(double)(num_pix)-average*average);
-		//ImagePlus new_img=NewImage.createByteImage("Result", (int)width, (int)height, 1, NewImage.FILL_BLACK);
-		
-		//byte [] new_pix=(byte [])new_img.getProcessor().getPixels();
-		byte [] new_pix= new byte [width*height];
-		
-		float thresh=stk.get((int)(stk.size()*prctile/100));
-		//IJ.log("Threshold:  "+sigma);
-		//IJ.log("SNR*Threshold:  " +(sigma*SNR));
-		
-		for (int i=0; i<width*height; i++)
-		{
-			if ((double)pix[i]-average<sigma*(double)SNR) continue;
-			new_pix[i]=(byte)255;
-		}
-		return new_pix;
+		double [] tmp={average, sigma};
+		return tmp;
+
 	}
 	
 }
