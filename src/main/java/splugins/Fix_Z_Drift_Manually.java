@@ -286,7 +286,7 @@ public class Fix_Z_Drift_Manually implements PlugIn {
 	{
 		final int[] windowList = WindowManager.getIDList();
 		//IJ.log(""+windowList[0]+"\n");
-		final Stack stack = new Stack();
+		final Stack <ImagePlus> stack = new Stack <ImagePlus>();
 		for (int k = 0; ((windowList != null) && (k < windowList.length)); k++) 
 		{
 			final ImagePlus imp = WindowManager.getImage(windowList[k]);

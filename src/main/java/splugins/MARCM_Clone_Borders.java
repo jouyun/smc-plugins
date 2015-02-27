@@ -70,6 +70,10 @@ public class MARCM_Clone_Borders implements MouseListener, PlugIn {
 		{
 			current_point=2;
 		}
+		if(event.isShiftDown()&&(event.isMetaDown()||event.isControlDown()))
+		{
+			current_point=3;
+		}
 		Roi roi = imp.getRoi();
 		ResultsTable rslt;
 		rslt=ResultsTable.getResultsTable();
@@ -170,11 +174,11 @@ public class MARCM_Clone_Borders implements MouseListener, PlugIn {
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (e.isControlDown()&&e.isShiftDown())
+		/*if (e.isControlDown()&&e.isShiftDown())
 		{
 			canvas.removeMouseListener(this);
 			return;
-		}
+		}*/
 
 	}
 

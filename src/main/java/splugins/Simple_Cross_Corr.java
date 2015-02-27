@@ -7,6 +7,15 @@ import ij.gui.NewImage;
 import ij.gui.Plot;
 import ij.plugin.PlugIn;
 
+/******************************************************************
+ * Simple_Cross_Corr
+ * @author smc
+ *
+ *	Will simply calculate a normalized cross correlation over slices and frames, channel 1 to channel 2, generating
+ *	an image with the 0,0 value for each slice frame pair, useful for seeing if things are more or less cross-correlated
+ *  in time (e.g. par3 and nuclear label)
+ */
+
 public class Simple_Cross_Corr implements PlugIn {
 
 	@Override

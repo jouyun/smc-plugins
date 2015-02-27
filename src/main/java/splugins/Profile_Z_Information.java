@@ -13,6 +13,15 @@ import ij.gui.NewImage;
 import ij.gui.Plot;
 import ij.plugin.PlugIn;
 
+/******************************************************************
+ * Profile_Z_Information
+ * @author smc
+ *
+ *	Uses single pixel shift auto-correlation as a metric for focus quality, displays a line profile of it (in case of single z-stack)
+ *	or an image (in case of z/time stack).  This image can be used for the Fix_Z_Drift_Manually plugin.
+ */
+
+
 public class Profile_Z_Information implements PlugIn {
 
 	
