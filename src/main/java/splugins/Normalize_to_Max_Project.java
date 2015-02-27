@@ -68,7 +68,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Stack;
 
-public class normalize_to_max_project implements PlugIn {
+public class Normalize_to_Max_Project implements PlugIn {
 
 	int width;
 	int height;

@@ -5,7 +5,7 @@ import ij.WindowManager;
 import ij.plugin.PlugIn;
 
 
-public class Unity_Normalize implements PlugIn {
+public class Normalize_Unity implements PlugIn {
 
 	@Override
 	public void run(String arg) {
