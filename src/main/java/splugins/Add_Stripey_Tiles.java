@@ -101,6 +101,7 @@ public class Add_Stripey_Tiles implements PlugIn{
 			{
 				convert_array[i][j*2]=i+2*j*x_tiles;
 				convert_array[i][j*2+1]=x_tiles+(x_tiles-i-1)+2*j*x_tiles;
+				convert_array[i][j*2+1]=y_tiles-1-convert_array[i][j*2+1];
 			}
 		}
 		if (y_tiles%2==1)
@@ -138,6 +139,7 @@ public class Add_Stripey_Tiles implements PlugIn{
 				}
 				if (above_thresh) continue;
 				if (Math.random()>sparsity) continue;
+				IJ.log("Doing one:  "+i+","+j);
 				for (int m=0; m<border_width; m++)
 				{
 					for (int n=0; n<height; n++)

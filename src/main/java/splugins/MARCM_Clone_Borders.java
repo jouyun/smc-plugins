@@ -98,7 +98,6 @@ public class MARCM_Clone_Borders implements MouseListener, PlugIn {
 					if (p.contains(P)) area++;
 				}
 			}
-			
 			if (event.getClickCount() == 2) {
 				IJ.log("Double!");
 				rslt.incrementCounter();
