@@ -57,7 +57,7 @@ public class Fix_XY_Drift_Manually implements PlugIn {
 		{
 			int x=(int) Math.floor(x_vals[i]-x_vals[0]);
 			int y=(int) Math.floor(y_vals[i]-y_vals[0]);
-			IJ.log("Shift: "+x+","+y);
+			IJ.log("Shift: "+i+","+x+","+y);
 			imp.getStack().getProcessor((int) f_vals[i]).translate(-x, -y);
 		}
 		imp.updateAndDraw();

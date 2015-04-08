@@ -122,13 +122,24 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
 		output_array=(byte [])new_img.getProcessor().getPixels();
 		input_array=(float [])imp.getProcessor().getPixels();
 		Roi roi = imp.getRoi();
+		double [][] points=new double[0][0];
         if(roi!=null)
         {
         	Polygon p=roi.getPolygon();
         	
+        	points=new double[p.npoints][3];
         	for (int i=0; i<p.npoints; i++)
         	{
-        		int grow_from_x=p.xpoints[i], grow_from_y=p.ypoints[i];
+        		points[i][0]=input_array[p.ypoints[i]*width+p.xpoints[i]];
+        		points[i][1]=p.xpoints[i];
+        		points[i][2]=p.ypoints[i]; 
+        	}
+        	
+        	Manual_Tracker.vector_sort(points,  true);
+        	
+            for (int i=0; i<points.length; i++)
+            {
+        		int grow_from_x=(int) points[i][1], grow_from_y=(int) points[i][2];
         		if (output_array[grow_from_y*width+grow_from_x]>0) continue;
         		current_peak=input_array[grow_from_y*width+grow_from_x];
         		MyIntPoint curpt=new MyIntPoint(grow_from_x, grow_from_y);
@@ -154,11 +165,13 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
         			}
         			tmp_point_list.clear();
         			if (ctr==0) done=true;
+        		
         		}
-        	}
+            }
+        	new_img.show();
+            new_img.updateAndDraw();
         }
-        new_img.show();
-        new_img.updateAndDraw();
+        
 	}
 	boolean check_neighbor(int x, int y)
 	{
