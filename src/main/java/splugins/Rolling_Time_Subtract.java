@@ -95,7 +95,7 @@ public class Rolling_Time_Subtract implements PlugIn {
 		for (int i=window; i<slices; i++)
 		{
 			float [] new_pix=(float [])my_img.getStack().getPixels(i);
-			for (int k=0; k<width*height; k++) if (new_pix[k]<0) new_pix[k]=0;
+			for (int k=0; k<width*height; k++) if (truncate&&new_pix[k]<0) new_pix[k]=0;
 		}
 		return my_img;
 	}

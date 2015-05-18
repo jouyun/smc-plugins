@@ -48,6 +48,7 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         
         RoiManager manager=RoiManager.getInstance();
         hit_list=new boolean[manager.getCount()];
+        for (int i=0; i<hit_list.length; i++) hit_list[i]=true;
 
 	}
 
@@ -58,25 +59,31 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         int flags = e.getModifiers();
         //IJ.log("keyPressed: keyCode=" + keyCode + " (" + KeyEvent.getKeyText(keyCode) + ")");
         //IJ.log("char: "+keyChar);
-        if (keyChar=='j')
+        if (keyChar=='f')
         {
         	RoiManager manager=RoiManager.getInstance();
         	int selected=manager.getSelectedIndex();
         	manager.selectAndMakeVisible(myimg, selected+1);
         	hit_list[selected]=true;
         }
-        if (keyChar=='f')
+        if (keyChar=='d')
         {
         	RoiManager manager=RoiManager.getInstance();
         	int selected=manager.getSelectedIndex();
         	manager.selectAndMakeVisible(myimg, selected+1);
         	hit_list[selected]=false;
         }
-        if (keyChar=='d')
+        if (keyChar=='o')
         {
         	RoiManager manager=RoiManager.getInstance();
         	int selected=manager.getSelectedIndex();
         	manager.selectAndMakeVisible(myimg, selected-1);
+        }
+        if (keyChar=='l')
+        {
+        	RoiManager manager=RoiManager.getInstance();
+        	int selected=manager.getSelectedIndex();
+        	manager.selectAndMakeVisible(myimg, selected+1);
         }
         if (keyChar=='q')
         {

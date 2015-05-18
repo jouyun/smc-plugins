@@ -2,6 +2,7 @@ package splugins;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 
 
@@ -11,6 +12,11 @@ public class Normalize_Unity implements PlugIn {
 	public void run(String arg) {
 		ImagePlus img=WindowManager.getCurrentImage();
 		int width=img.getWidth(), height=img.getHeight(), slices=img.getImageStackSize();
+		
+		GenericDialog gd=new GenericDialog("Normalize_Unity");
+		gd.addCheckbox("Ignore zeros?", true);
+		gd.showDialog();
+		boolean ignore_zeros=gd.getNextBoolean();
 		
 		for (int i=0; i<slices; i++)
 		{
@@ -22,6 +28,10 @@ public class Normalize_Unity implements PlugIn {
 				if (t.isNaN()) 
 				{
 					//pix[j]=0;
+					continue;
+				}
+				if (ignore_zeros&&t==0)
+				{
 					continue;
 				}
 				if (t>max) max=t;

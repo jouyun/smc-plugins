@@ -242,7 +242,11 @@ public class Fix_Z_Drift_Manually implements PlugIn {
 		
 		double rtn=-1E100;
 		
-		if (Math.abs(cross[0])<.1||Math.abs(cross[1])<.1||Math.abs(cross[2])<.1) 
+		IJ.log("Dots: "+Math.abs(do_dot(AB,AC))+","+Math.sqrt(do_dot(AB,AB))+","+Math.sqrt(do_dot(AC,AC)));
+		
+		boolean flag=(Math.abs(do_dot(AB,AC))/Math.sqrt(do_dot(AB,AB))/Math.sqrt(do_dot(AC,AC)))>.9;
+		
+		if (Math.abs(cross[0])<.1||Math.abs(cross[1])<.1||Math.abs(cross[2])<.1||flag) 
 		{
 			IJ.log("Well *** happened, you got a null cross, guess you will have to fix that");
 			double [][] line_pts={{sort_me[0][1], sort_me[0][2], sort_me[0][3]}, {sort_me[1][1], sort_me[1][2], sort_me[1][3]}};
@@ -253,6 +257,16 @@ public class Fix_Z_Drift_Manually implements PlugIn {
 			rtn=(cross[0]*(x-A[0])+cross[1]*(y-A[1]))/-cross[2]+A[2];
 		}
 		
+		return rtn;
+	}
+	
+	public static double do_dot(double [] Q, double [] R)
+	{
+		double rtn=0;
+		for (int i=0; i<Q.length; i++)
+		{
+			rtn=rtn+Q[i]*R[i];
+		}
 		return rtn;
 	}
 	
