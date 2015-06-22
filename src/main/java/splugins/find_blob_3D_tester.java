@@ -83,10 +83,12 @@ public class find_blob_3D_tester implements PlugIn {
 		dlg.addNumericField("Threshold", 500, 0);
 		dlg.addNumericField("Minimum size", 80, 0);
 		dlg.addNumericField("Selection filter", 200, 2);
+		dlg.addCheckbox("Ratiometric:  ", true);
 		dlg.showDialog();
 		float threshold=(float) dlg.getNextNumber();
 		int minimum_size=(int)dlg.getNextNumber();
 		float selection_criteria=(float) dlg.getNextNumber();
+		boolean ratiometric=dlg.getNextBoolean();
 		
 		float [] pix=new float[width*height*depth];
 		for (int i=0; i<depth; i++)
@@ -104,12 +106,13 @@ public class find_blob_3D_tester implements PlugIn {
 		int number_big_enough=0;
 		ResultsTable the_table=ResultsTable.getResultsTable();
 		the_table.reset();
-		float [] minmax=Histogram_Normalize_Percentile.Find_Percentiles(img, 100, 99, 10, 1, 1);
+		//float [] minmax=Histogram_Normalize_Percentile.Find_Percentiles(img, 100, 99, 10, 1, 1);
 		//IJ.log("minmax: "+minmax[0]+","+minmax[1]+","+minmax[2]);
 		Utility3D my3D=new Utility3D();
 		ArrayList <ArrayList <int []>> expanded_rtn=(ArrayList <ArrayList <int []>>) rtn.clone();
 		short [] imgarray=my3D.blobarray_to_imgarray(expanded_rtn, width, height, depth);
 		my3D.dilate_no_merge(imgarray, rtn, width, height, depth, 2);
+		int marked_blobs=0;
 		for (ListIterator jF=rtn.listIterator(); jF.hasNext();)
 		{
 			idx++;
@@ -160,7 +163,15 @@ public class find_blob_3D_tester implements PlugIn {
 			
 			if (img.getNChannels()>1)
 			{
-				if (averages[0]/averages[cur_channel]<selection_criteria) continue;
+				if (ratiometric) 
+				{
+					if (averages[0]/averages[cur_channel]<selection_criteria) continue;
+				}
+				else
+				{
+					if (averages[0]<selection_criteria) continue;
+				}
+				
 				//if (expanded_averages[0]<(minmax[1]-minmax[0])*selection_criteria+minmax[0]||expanded_averages[0]>(minmax[1]-minmax[0])*0.4+minmax[0]) continue;
 				//if (expanded_averages[0]<(minmax[1]-minmax[0])*selection_criteria+minmax[0]) continue;
 				//if (expanded_averages[0]<minmax[2]*selection_criteria+minmax[0]) continue;
@@ -172,11 +183,12 @@ public class find_blob_3D_tester implements PlugIn {
 			the_table.addValue("X", tmp_pt[0]);
 			the_table.addValue("Y", tmp_pt[1]);
 			the_table.addValue("Z", tmp_pt[2]);
+			
 			for (int i=0; i<img.getNChannels(); i++) 
 			{
 				the_table.addValue("Channel"+(i+1), expanded_averages[i]);
 			}
-			
+			marked_blobs++;
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
 				int [] current_point=(int [])iF.next();
@@ -191,9 +203,10 @@ public class find_blob_3D_tester implements PlugIn {
 		ImagePlus new_img2=Dilate3D.make_3D_ImagePlusByte(new_byte_arr, width, height, depth);
 		new_img2.show(); 
 		new_img2.updateAndDraw();*/
-		
+		the_table.incrementCounter();
+		the_table.addValue("Total", number_big_enough);
 		the_table.show("Results");
-		IJ.log(""+number_big_enough);
+		//IJ.log(""+marked_blobs+"/"+number_big_enough);
 		new_img.show();
 		new_img.updateAndDraw();
 		

@@ -92,12 +92,14 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				Writer w= new BufferedWriter(new OutputStreamWriter(fos));
 				w.write("# Define the number of dimensions we are working on\n");
 				w.write("dim = 2\n\n# Define the image coordinates\n");
+				
 				int [] my_list=the_list.get(j);
 				for (int i=0; i<my_list.length; i++)
 				{
 					int [] idc=get_index(my_list[i], x_tiles, y_tiles);
 					IJ.log("idx: "+my_list[i]+" x: "+idc[0]+" y: "+idc[1]);
 					w.write("Tiffs"+String.format("%04d", my_list[i])+".tif; ; ("+(idc[0]*(width*0.8))+", "+((y_tiles-idc[1]-1)*(height*0.8))+")\n");
+					
 				}
 				w.flush();
 				w.close();
