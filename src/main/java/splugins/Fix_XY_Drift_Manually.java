@@ -12,6 +12,7 @@ import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
+import ij.process.ImageProcessor;
 
 public class Fix_XY_Drift_Manually implements PlugIn {
 
@@ -55,10 +56,12 @@ public class Fix_XY_Drift_Manually implements PlugIn {
 		
 		for (int i=0; i<slices; i++)
 		{
-			int x=(int) Math.floor(x_vals[i]-x_vals[0]);
-			int y=(int) Math.floor(y_vals[i]-y_vals[0]);
+			float x=(float) (x_vals[i]-x_vals[0]);
+			float y=(float) (y_vals[i]-y_vals[0]);
 			IJ.log("Shift: "+i+","+x+","+y);
-			imp.getStack().getProcessor((int) f_vals[i]).translate(-x, -y);
+			ImageProcessor tmp=imp.getStack().getProcessor((int) f_vals[i]);
+			tmp.setInterpolationMethod(ImageProcessor.BICUBIC);
+			tmp.translate(-x, -y);
 		}
 		imp.updateAndDraw();
 

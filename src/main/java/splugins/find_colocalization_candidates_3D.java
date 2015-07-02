@@ -72,8 +72,8 @@ public class find_colocalization_candidates_3D implements PlugIn {
 
 	@Override
 	public void run(String arg) {
-		int lateral_half=20;
-		int z_clip=3;
+		int lateral_half=40;
+		int z_clip=5;
 		
 		ImagePlus img;
 		img=WindowManager.getCurrentImage();
@@ -163,9 +163,9 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			
 			if (img.getNChannels()>1)
 			{
-				if (averages[0]/expanded_averages[0]<1.4) continue;
+				//if (averages[0]/expanded_averages[0]<1.4) continue;
 				//OLDif (averages[0]/averages[cur_channel]<selection_criteria) continue;
-				//if (averages[0]<selection_criteria) continue;
+				if (averages[0]<selection_criteria) continue;
 			}
 			//If meets criteria, log in results
 			the_table.incrementCounter();

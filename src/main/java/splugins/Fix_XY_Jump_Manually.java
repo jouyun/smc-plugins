@@ -8,6 +8,7 @@ import ij.WindowManager;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
+import ij.process.ImageProcessor;
 
 public class Fix_XY_Jump_Manually implements PlugIn {
 
@@ -47,11 +48,14 @@ public class Fix_XY_Jump_Manually implements PlugIn {
 			IJ.log("X,Y,Z: "+kx[i]+","+ky[i]+","+kf[i]);
 		}
 		IJ.log("Here");
+
 		for (int i=(int)kf[1]-1; i<slices; i++)
 		{
-			int x=(int) Math.floor(kx[1]-kx[0]);
-			int y=(int) Math.floor(ky[1]-ky[0]);
+			float x=(float) Math.floor(kx[1]-kx[0]);
+			float y=(float) Math.floor(ky[1]-ky[0]);
 			IJ.log("Shift: "+i+","+x+","+y);
+			imp.getStack().getProcessor(i+1).setInterpolationMethod(ImageProcessor.BILINEAR);
+			
 			imp.getStack().getProcessor(i+1).translate(-x, -y);
 		}
 		imp.updateAndDraw();
