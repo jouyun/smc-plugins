@@ -93,7 +93,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		y=e.getY();
 		x=canvas.offScreenX(x);
 		y=canvas.offScreenY(y);
-		IJ.log("X,Y: "+x+","+y);
+		//IJ.log("X,Y: "+x+","+y);
 		Roi my_roi=new Roi(x,y,1,1);
 		
 		RoiManager manager=RoiManager.getInstance();
@@ -236,7 +236,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 			//for (int c=0; c<channels; c++)
 			for (int c=current_channel; c<current_channel+1; c++)
     		{
-				if (current_slice+1>=slices+1) break;
+				if (current_slice+1>=slices) break;
     			float [] pix = (float [])imp.getStack().getProcessor(1+c+(current_slice+1)*channels+f*channels*slices).getPixels();
     			for (int xx=0; xx<width; xx++)
     			{
@@ -299,7 +299,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		{
 			Roi current_roi=imp.getRoi();
 			Polygon poly=current_roi.getPolygon();
-			IJ.log("x,y: "+poly.xpoints[0]+ ","+poly.ypoints[0]);
+			//IJ.log("x,y: "+poly.xpoints[0]+ ","+poly.ypoints[0]);
 		}
 		
 		if (rtn=='l')
@@ -314,20 +314,20 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		}
 		if (rtn=='d')
 		{
-			IJ.log("I'm in D");
+			//IJ.log("I'm in D");
 			String cur_name=RoiManager.getInstance().getName(RoiManager.getInstance().getSelectedIndex());
-			IJ.log(cur_name);
+			//IJ.log(cur_name);
 			int fidx=cur_name.indexOf("-");
 			int sidx=cur_name.indexOf("-",fidx+1);
-			IJ.log("fidx, sidx: "+fidx+","+sidx);
+			/*IJ.log("fidx, sidx: "+fidx+","+sidx);
 			IJ.log(cur_name.substring(0, fidx));
 			IJ.log(cur_name.substring(fidx+1, sidx));
-			IJ.log(cur_name.substring(sidx+1,cur_name.length()));
+			IJ.log(cur_name.substring(sidx+1,cur_name.length()));*/
 			int raw_slice=Integer.parseInt(cur_name.substring(0, fidx));
 			int y=Integer.parseInt(cur_name.substring(fidx+1, sidx));
 			int x=Integer.parseInt(cur_name.substring(sidx+1, cur_name.length()));
 			
-			IJ.log("X,Y,Slice: "+x+","+y+","+raw_slice);
+			//IJ.log("X,Y,Slice: "+x+","+y+","+raw_slice);
 			raw_slice--;
 			int t_channel=raw_slice%channels;
 			int t_slice=raw_slice/channels%slices;
@@ -341,7 +341,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		
 		if (rtn=='r')
 		{
-			IJ.log("R");
+			//IJ.log("R");
 			IJ.run("Clear Results");
 			ResultsTable rslt;
 			rslt=ResultsTable.getResultsTable();
