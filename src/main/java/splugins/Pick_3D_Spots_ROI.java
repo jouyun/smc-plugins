@@ -50,7 +50,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
         cur_slice=imp.getSlice()-1;
         
         draw_radius=100;
-        draw_inner_radius=75;
+        draw_inner_radius=64;
         
         backup_data=new float[frames][slices][channels][width*height];
         for (int f=0; f<frames; f++)
@@ -96,10 +96,21 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		Roi my_roi=new Roi(x,y,1,1);
 		
 		RoiManager manager=RoiManager.getInstance();
+		
 		if (manager==null) manager=new RoiManager();
+		//MyRoiManager manager=new MyRoiManager();
 		
 		if (!roi_listening) 
 		{
+			/*IJ.log("Number windows: "+manager.getWindows().length);
+			Window mywin=manager.getWindows()[0];
+			
+			mywin.removeKeyListener(IJ.getInstance());
+			mywin.addKeyListener(this);*/
+			
+			//manager.setKeyListener(this);
+			
+			/*
 			KeyListener[] listers=manager.getKeyListeners();
 			IJ.log("Listeners: "+listers.length);
 			for (int i=0; i<listers.length; i++) manager.removeKeyListener(listers[i]);
@@ -127,7 +138,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 				}
 				manager.getComponent(i).addKeyListener(this);
 			}
-			manager.addKeyListener(this);
+			manager.addKeyListener(this);*/
 			roi_listening=true;
 		}
 		
@@ -229,7 +240,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 	public void keyPressed(KeyEvent e) {
 		char rtn;
 		rtn=e.getKeyChar();
-		if (rtn!='d'&&rtn!='q') return;
+		//if (rtn!='j'&&rtn!='q') return;
 		if (rtn=='q')
 		{
 			canvas.removeMouseListener(this);
@@ -240,6 +251,17 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 			Roi current_roi=imp.getRoi();
 			Polygon poly=current_roi.getPolygon();
 			IJ.log("x,y: "+poly.xpoints[0]+ ","+poly.ypoints[0]);
+		}
+		
+		if (rtn=='o')
+		{
+			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()+1);
+			WindowManager.setCurrentWindow(imp.getWindow());
+		}
+		if (rtn=='l')
+		{
+			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()-1);
+			WindowManager.setCurrentWindow(imp.getWindow());
 		}
 
 	}
