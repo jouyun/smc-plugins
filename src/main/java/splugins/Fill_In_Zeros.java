@@ -3,6 +3,7 @@ package splugins;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
@@ -11,6 +12,7 @@ public class Fill_In_Zeros implements PlugIn {
 
 	@Override
 	public void run(String arg0) {
+		IJ.log("Happy happy joy joy");
 		ImagePlus imp;
 		int width, height, slices, frames, channels, cur_slice, cur_frame, cur_channel;
 		imp=WindowManager.getCurrentImage();
@@ -62,6 +64,7 @@ public class Fill_In_Zeros implements PlugIn {
 			}
 		}
 		imp.updateAndDraw();
+		
 
 	}
 

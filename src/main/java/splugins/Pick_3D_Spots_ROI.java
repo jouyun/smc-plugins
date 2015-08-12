@@ -6,6 +6,7 @@ import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
+import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
 
@@ -146,20 +147,40 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		float val=10000;
 		
 		int current_slice=imp.getSlice()-1;
+		int current_channel=imp.getChannel()-1;
+		
+		ReplaceSpot(x,y,current_channel, current_slice, val);
+		
+		manager.addRoi(my_roi);
+
+		imp.updateAndDraw();
+	}
+
+	public void ReplaceSpot(int x, int y, int current_channel, int current_slice, float val)
+	{
 		
 		for (int f=0; f<frames; f++)
         {
 			//Do a point for all the points under 1 slice below current slice
 			for (int s=0; s<current_slice-1; s++)
 			{
-        		for (int c=0; c<channels; c++)
+        		//for (int c=0; c<channels; c++)
+				for (int c=current_channel; c<current_channel+1; c++)
         		{
         			float [] pix = (float [])imp.getStack().getProcessor(1+c+s*channels+f*channels*slices).getPixels();
-        			pix[x+y*width]=val;
+        			if (val==0)
+        			{
+        				pix[x+y*width]=backup_data[f][s][c][x+y*width];
+        			}
+        			else
+        			{
+        				pix[x+y*width]=val;
+        			}
         		}
 			}
 			//Do a smaller circle for the slice just below current
-			for (int c=0; c<channels; c++)
+			//for (int c=0; c<channels; c++)
+			for (int c=current_channel; c<current_channel+1; c++)
     		{
 				if (current_slice-1<0) break;
     			float [] pix = (float [])imp.getStack().getProcessor(1+c+(current_slice-1)*channels+f*channels*slices).getPixels();
@@ -172,13 +193,22 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
     					
     					if (draw_inner_radius/2<dr&&dr<draw_radius/2)
     					{
-    						pix[xx+yy*width]=10000;
+    	        			if (val==0)
+    	        			{
+    	        				pix[xx+yy*width]=backup_data[f][current_slice-1][c][xx+yy*width];
+    	        			}
+    	        			else
+    	        			{
+    	        				pix[xx+yy*width]=val;
+    	        			}
+
     					}
     				}
     			}
     		}
 			//Do a full circle for the current slice
-			for (int c=0; c<channels; c++)
+			//for (int c=0; c<channels; c++)
+			for (int c=current_channel; c<current_channel+1; c++)
     		{
     			float [] pix = (float [])imp.getStack().getProcessor(1+c+(current_slice)*channels+f*channels*slices).getPixels();
     			for (int xx=0; xx<width; xx++)
@@ -190,13 +220,21 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
     					
     					if (draw_inner_radius<dr&&dr<draw_radius)
     					{
-    						pix[xx+yy*width]=10000;
+    						if (val==0)
+    	        			{
+    	        				pix[xx+yy*width]=backup_data[f][current_slice][c][xx+yy*width];
+    	        			}
+    	        			else
+    	        			{
+    	        				pix[xx+yy*width]=val;
+    	        			}
     					}
     				}
     			}
     		}
 			//Do a smaller circle for the slice just above current
-			for (int c=0; c<channels; c++)
+			//for (int c=0; c<channels; c++)
+			for (int c=current_channel; c<current_channel+1; c++)
     		{
 				if (current_slice+1>=slices+1) break;
     			float [] pix = (float [])imp.getStack().getProcessor(1+c+(current_slice+1)*channels+f*channels*slices).getPixels();
@@ -209,7 +247,14 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
     					
     					if (draw_inner_radius/2<dr&&dr<draw_radius/2)
     					{
-    						pix[xx+yy*width]=10000;
+    						if (val==0)
+    	        			{
+    	        				pix[xx+yy*width]=backup_data[f][current_slice+1][c][xx+yy*width];
+    	        			}
+    	        			else
+    	        			{
+    	        				pix[xx+yy*width]=val;
+    	        			}
     					}
     				}
     			}
@@ -217,19 +262,23 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 			//Do a point for all the points above 1 slice above current slice
 			for (int s=current_slice+2; s<slices; s++)
 			{
-        		for (int c=0; c<channels; c++)
+        		//for (int c=0; c<channels; c++)
+				for (int c=current_channel; c<current_channel+1; c++)
         		{
         			float [] pix = (float [])imp.getStack().getProcessor(1+c+s*channels+f*channels*slices).getPixels();
-        			pix[x+y*width]=val;
+        			if (val==0)
+        			{
+        				pix[x+y*width]=backup_data[f][s][c][x+y*width];
+        			}
+        			else
+        			{
+        				pix[x+y*width]=val;
+        			}
         		}
 			}
         }
-		
-		manager.addRoi(my_roi);
-
-		imp.updateAndDraw();
 	}
-
+	
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
@@ -253,15 +302,68 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 			IJ.log("x,y: "+poly.xpoints[0]+ ","+poly.ypoints[0]);
 		}
 		
-		if (rtn=='o')
+		if (rtn=='l')
 		{
 			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()+1);
 			WindowManager.setCurrentWindow(imp.getWindow());
 		}
-		if (rtn=='l')
+		if (rtn=='o')
 		{
 			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()-1);
 			WindowManager.setCurrentWindow(imp.getWindow());
+		}
+		if (rtn=='d')
+		{
+			IJ.log("I'm in D");
+			String cur_name=RoiManager.getInstance().getName(RoiManager.getInstance().getSelectedIndex());
+			IJ.log(cur_name);
+			int fidx=cur_name.indexOf("-");
+			int sidx=cur_name.indexOf("-",fidx+1);
+			IJ.log("fidx, sidx: "+fidx+","+sidx);
+			IJ.log(cur_name.substring(0, fidx));
+			IJ.log(cur_name.substring(fidx+1, sidx));
+			IJ.log(cur_name.substring(sidx+1,cur_name.length()));
+			int raw_slice=Integer.parseInt(cur_name.substring(0, fidx));
+			int y=Integer.parseInt(cur_name.substring(fidx+1, sidx));
+			int x=Integer.parseInt(cur_name.substring(sidx+1, cur_name.length()));
+			
+			IJ.log("X,Y,Slice: "+x+","+y+","+raw_slice);
+			raw_slice--;
+			int t_channel=raw_slice%channels;
+			int t_slice=raw_slice/channels%slices;
+			ReplaceSpot(x,y,t_channel,t_slice,0);
+			imp.updateAndDraw();
+			
+			int current_roi=RoiManager.getInstance().getSelectedIndex();
+			RoiManager.getInstance().runCommand("Delete");
+			RoiManager.getInstance().select(current_roi);
+		}
+		
+		if (rtn=='r')
+		{
+			IJ.log("R");
+			IJ.run("Clear Results");
+			ResultsTable rslt;
+			rslt=ResultsTable.getResultsTable();
+			for (int i=0; i<RoiManager.getInstance().getCount(); i++)
+			{
+				rslt.incrementCounter();
+				String cur_name=RoiManager.getInstance().getName(i);
+				int fidx=cur_name.indexOf("-");
+				int sidx=cur_name.indexOf("-",fidx+1);
+				int raw_slice=Integer.parseInt(cur_name.substring(0, fidx));
+				int y=Integer.parseInt(cur_name.substring(fidx+1, sidx));
+				int x=Integer.parseInt(cur_name.substring(sidx+1, cur_name.length()));
+				raw_slice--;
+				int t_channel=raw_slice%channels;
+				int t_slice=raw_slice/channels%slices;
+				rslt.addValue("X", x);
+				rslt.addValue("Y", y);
+				rslt.addValue("Slice", t_slice);
+				rslt.addValue("Channel", t_channel);
+				rslt.show("Results");
+			}
+			
 		}
 
 	}
