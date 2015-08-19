@@ -59,7 +59,7 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         int flags = e.getModifiers();
         //IJ.log("keyPressed: keyCode=" + keyCode + " (" + KeyEvent.getKeyText(keyCode) + ")");
         //IJ.log("char: "+keyChar);
-        if (keyChar=='f')
+        if (keyChar=='j')
         {
         	RoiManager manager=RoiManager.getInstance();
         	int selected=manager.getSelectedIndex();
@@ -109,6 +109,48 @@ public class Filter_ROIs implements KeyListener, PlugIn {
     		new_img.show();
     		new_img.updateAndDraw();*/
     		
+        }
+        if (keyChar=='z')
+        {
+        	RoiManager manager=RoiManager.getInstance();
+        	int selected=manager.getSelectedIndex();
+        	Roi current_roi=manager.getRoi(selected);
+        	float xx=0.0f, yy=0.0f, count=0.0f;;
+        	for (int x=0; x<width; x++)
+        	{
+        		for (int y=0; y<height; y++)
+        		{
+        			if (current_roi.contains(x, y))
+        			{
+        				xx+=x;
+        				yy+=y;        			
+        				count++;
+        			}
+        		}
+        	}
+        	xx=xx/count;
+        	yy=yy/count;
+        	
+        	int cmx=(int) Math.floor(xx), cmy=(int) Math.floor(yy);
+        	
+        	//Check all of the other rois (or maybe just the next 100 frames worth) and find any that contain the Center of mass
+        	//from this guy, if so delete it too
+        	int current_frame=myimg.getSlice();
+        	int index=selected;
+        	while (index<manager.getCount())
+        	{
+        		Roi next_roi=manager.getRoi(index);
+        		manager.select(index);
+        		if (next_roi.contains(cmx, cmy))
+        		{
+        			
+        			IJ.log("My z, current_frame: "+current_frame+","+myimg.getSlice());
+        			manager.runCommand("Delete");
+        		}
+        		index++;
+        		if (myimg.getSlice()>current_frame+300) index=manager.getCount();
+        	}
+        	manager.select(selected);
         }
 
 	}
