@@ -136,13 +136,13 @@ public class Manual_Alignment implements PlugIn, KeyListener, ImageListener {
         boolean shift_down=e.isShiftDown();
         //IJ.log("keyPressed: keyCode=" + keyCode + " (" + KeyEvent.getKeyText(keyCode) + ")");
         //IJ.log("char: "+keyChar);
-        if (keyChar=='n') 
+        if (keyChar=='n'&&adjust_mode==false) 
         {
         	myimg.setSlice(myimg.getCurrentSlice()+1);
         	myimg.updateAndDraw();
         	return;
         }
-        if (keyChar=='p') 
+        if (keyChar=='p'&&adjust_mode==false) 
         {
         	myimg.setSlice(myimg.getCurrentSlice()-1);
         	myimg.updateAndDraw();

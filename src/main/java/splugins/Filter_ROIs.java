@@ -137,6 +137,7 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         	//from this guy, if so delete it too
         	int current_frame=myimg.getSlice();
         	int index=selected;
+        	manager.runCommand("Delete");
         	while (index<manager.getCount())
         	{
         		Roi next_roi=manager.getRoi(index);
