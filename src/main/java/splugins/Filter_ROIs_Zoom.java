@@ -170,7 +170,7 @@ public class Filter_ROIs_Zoom implements KeyListener, PlugIn {
         	if (nextidx<0) nextidx=0;
         	manager.selectAndMakeVisible(myimg, nextidx);
         	IJ.run("To Selection");
-        	for (int i=0; i<6; i++) IJ.run("Out [-]");
+        	for (int i=0; i<7; i++) IJ.run("Out [-]");
 
 
         	/*Remove this if too slow*/
@@ -217,7 +217,7 @@ public class Filter_ROIs_Zoom implements KeyListener, PlugIn {
         	if (nextidx<0) nextidx=0;
         	manager.selectAndMakeVisible(myimg, nextidx);
         	IJ.run("To Selection");
-        	for (int i=0; i<6; i++) IJ.run("Out [-]");
+        	for (int i=0; i<7; i++) IJ.run("Out [-]");
 
         	
         	/*Remove this if too slow*/

@@ -153,6 +153,56 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         	}
         	manager.select(selected);
         }
+        if (keyChar=='c')
+        {
+        	RoiManager manager=RoiManager.getInstance();
+        	int selected=manager.getSelectedIndex();
+        	Roi current_roi=manager.getRoi(selected);
+        	float xx=0.0f, yy=0.0f, count=0.0f;;
+        	for (int x=0; x<width; x++)
+        	{
+        		for (int y=0; y<height; y++)
+        		{
+        			if (current_roi.contains(x, y))
+        			{
+        				xx+=x;
+        				yy+=y;        			
+        				count++;
+        			}
+        		}
+        	}
+        	xx=xx/count;
+        	yy=yy/count;
+        	
+        	manager.runCommand("Delete");
+        	manager.select(selected);
+        }
+        if (keyChar=='x')
+        {
+        	IJ.log("Deleting all on this frame");
+        	RoiManager manager=RoiManager.getInstance();
+        	int selected=manager.getSelectedIndex();
+        	
+        	
+        	//Check all of the other rois (or maybe just the next 100 frames worth) and find any that contain the Center of mass
+        	//from this guy, if so delete it too
+        	int current_frame=myimg.getSlice();
+        	int index=selected;
+        	while (index<manager.getCount())
+        	{
+        		manager.select(index);
+        		if (myimg.getSlice()==current_frame) 
+        		{
+        			IJ.log("Index deleted: "+index+","+myimg.getSlice()+","+current_frame);
+        			manager.runCommand("Delete");
+        		}
+        		else
+        		{
+        			index++;
+        		}
+        	}
+        	manager.select(selected);
+        }
 
 	}
 
