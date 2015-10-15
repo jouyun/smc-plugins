@@ -84,9 +84,10 @@ public class MARCM_Clone_Borders implements MouseListener, PlugIn {
 			Polygon p=roi.getPolygon();
 			double area=0.0;
 			String tmp=new String("");
-			for (int i=0; i<p.npoints; i++)
+			for (int i=0; i<p.npoints-1; i++)
 			{
-				//IJ.log(""+p.xpoints[i]+","+p.ypoints[i]+","+current_list.get(i));
+				IJ.log("Num points: "+p.npoints);
+				IJ.log(""+p.xpoints[i]+","+p.ypoints[i]+","+current_list.get(i));
 				tmp=tmp+current_list.get(i)+",";
 			}
 			//IJ.log(tmp);

@@ -5,38 +5,66 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
+import loci.formats.ChannelSeparator;
+import loci.formats.FormatException;
+import loci.plugins.util.ImageProcessorReader;
+import loci.plugins.util.LociPrefs;
 
-public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
+public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 
 	ImageCanvas canvas;
 	ImageWindow win;
 	ImagePlus img;
-	int [][]ROI_list=new int[100][7];
+	
 	int n_rois=0;
 	String start_dir;
 	ArrayList <Integer> master_list=new ArrayList <Integer>();
+	class Meta_Data{
+		int width;
+		int height;
+		double pixel_size;
+		double origin_x;
+		double origin_y;
+	};
+	class ROI_List {
+		int file_index;
+		int x_origin;
+		int y_origin;
+		int width_in_overview;
+		int height_in_overview;
+		int width_in_original;
+		int height_in_original;
+		String img_name;
+	};
+	ROI_List [] the_ROI_list;
 	@Override
 	public void run(String arg0) {
 		
 		String base_file=IJ.getFilePath("Choose file");
 		start_dir=base_file.substring(0, base_file.lastIndexOf(File.separator)+1);
-		IJ.run("Bio-Formats Importer", "open="+base_file+" color_mode=Default view=Hyperstack stack_order=XYCZT series_1");
-		img=WindowManager.getCurrentImage();
-		String imgInfo=img.getInfoProperty();
-		double overview_pw=img.getCalibration().pixelWidth;
+		
+		GenericDialog gd=new GenericDialog("Number of first object associated with this overview:  ");
+		gd.addNumericField("First object file number", 1, 0);
+		gd.showDialog();
+		int initial_val=(int) gd.getNextNumber();
+		
+		Meta_Data meta=get_meta_data(base_file);
+		
+		double overview_pw=meta.pixel_size;
 		
 		/***************Added to make less painful to select ROIs, using scaled down version instead**************/
-		img.close();
 		IJ.run("Bio-Formats Importer", "open="+base_file+" color_mode=Default view=Hyperstack stack_order=XYCZT series_4");
 		img=WindowManager.getCurrentImage();
 		overview_pw=overview_pw*8;
@@ -49,14 +77,14 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
         win.addWindowListener(win);
         canvas.addMouseListener(this);
         canvas.addKeyListener(this);
+        
+        int max_rois=100;
+        the_ROI_list=new ROI_List[max_rois];
+        for (int i=0; i<max_rois; i++) the_ROI_list[i]=new ROI_List();
 		
 		
-		String matcher="Origin #1 = ";
-		int s=imgInfo.indexOf(matcher);
-		int t=imgInfo.indexOf(",",s);
-		int u=imgInfo.indexOf(")", t);
-		double top_left_overview_x=Double.parseDouble(imgInfo.substring(s+matcher.length()+1, t));
-		double top_left_overview_y=Double.parseDouble(imgInfo.substring(t+1, u));
+		double top_left_overview_x=meta.origin_x;
+		double top_left_overview_y=meta.origin_y;
 		
 		
 		
@@ -68,25 +96,19 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 		
 		double old_y=-100000000;
 		int ctr=0;
-		for (int i=1; i<10000; i++)
+		for (int i=initial_val; i<10000; i++)
 		{
 			
 			String fname="Image_"+IJ.pad(i,2)+".vsi";
-			IJ.run("Bio-Formats Importer", "open="+start_dir+fname+" color_mode=Default view=Hyperstack stack_order=XYCZT use_virtual_stack series_1");
-			ImagePlus temp_img=WindowManager.getCurrentImage();
-			imgInfo=temp_img.getInfoProperty();
-			double zoom_pw=temp_img.getCalibration().pixelWidth;
-			int wid=temp_img.getWidth();
-			int hei=temp_img.getHeight();
-
 			
-			matcher="Origin #1 = ";
-			s=imgInfo.indexOf(matcher);
-			t=imgInfo.indexOf(",",s);
-			u=imgInfo.indexOf(")", t);
-			double x_pos=Double.parseDouble(imgInfo.substring(s+matcher.length()+1, t));
-			double y_pos=Double.parseDouble(imgInfo.substring(t+1, u));
-			temp_img.close();
+			meta=get_meta_data(start_dir+fname);
+			
+			double zoom_pw=meta.pixel_size;
+			int wid=meta.width;
+			int hei=meta.height;
+			double x_pos=meta.origin_x;
+			double y_pos=meta.origin_y;
+			
 			if (old_y>y_pos) 
 			{
 				ctr=i-1;
@@ -98,13 +120,13 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 			int offset_x_pixel=(int) Math.floor((x_pos-top_left_overview_x)/overview_pw);
 			int offset_y_pixel=(int) Math.floor((y_pos-top_left_overview_y)/overview_pw);
 
-			ROI_list[n_rois][0]=i;
-			ROI_list[n_rois][1]=offset_x_pixel;
-			ROI_list[n_rois][2]=offset_y_pixel;
-			ROI_list[n_rois][3]=wid_over;
-			ROI_list[n_rois][4]=hei_over;
-			ROI_list[n_rois][5]=wid;
-			ROI_list[n_rois][6]=hei;
+			the_ROI_list[n_rois].file_index=i;
+			the_ROI_list[n_rois].x_origin=offset_x_pixel;
+			the_ROI_list[n_rois].y_origin=offset_y_pixel;
+			the_ROI_list[n_rois].width_in_overview=wid_over;
+			the_ROI_list[n_rois].height_in_overview=hei_over;
+			the_ROI_list[n_rois].width_in_original=wid;
+			the_ROI_list[n_rois].height_in_original=hei;
 			n_rois++;
 
 			old_y=y_pos;
@@ -112,9 +134,9 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 		byte [] pix=(byte [])img.getProcessor().getPixels();
 		for (int i=0; i<n_rois; i++)
 		{
-			for (int x=ROI_list[i][1]; x<ROI_list[i][1]+ROI_list[i][3]; x++)
+			for (int x=the_ROI_list[i].x_origin; x<the_ROI_list[i].x_origin+the_ROI_list[i].width_in_overview; x++)
 			{
-				for (int y=ROI_list[i][2]; y<ROI_list[i][2]+ROI_list[i][4]; y++)
+				for (int y=the_ROI_list[i].y_origin; y<the_ROI_list[i].y_origin+the_ROI_list[i].height_in_overview; y++)
 				{
 					pix[x+y*overview_width]=0;
 				}
@@ -125,6 +147,45 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 		
 		
 
+	}
+	
+	public Meta_Data get_meta_data(String fname)
+	{
+		ImageProcessorReader r = new ImageProcessorReader(
+				new ChannelSeparator(LociPrefs.makeImageReader()));
+		Meta_Data rtnval=new Meta_Data();
+		try {
+			try {
+				
+				
+				r.setId(fname);
+				rtnval.height=r.getSizeY();
+				rtnval.width=r.getSizeX();
+				
+				String origin=(String)r.getSeriesMetadataValue("Origin #1");
+				String origin_x=origin.substring(1, origin.indexOf(","));
+				String origin_y=origin.substring(origin.indexOf(",")+1, origin.length()-1);
+				
+				String calib=(String)r.getSeriesMetadataValue("Calibration #1");
+				calib=calib.substring(1, calib.indexOf(","));
+				
+				rtnval.origin_x=Double.parseDouble(origin_x);
+				rtnval.origin_y=Double.parseDouble(origin_y);
+				rtnval.pixel_size=Double.parseDouble(calib);
+				
+				IJ.log("wid, hei, ox, oy, pix:  "+rtnval.width+","+rtnval.height+","+rtnval.origin_x+","+rtnval.origin_y+","+rtnval.pixel_size);
+				
+			} catch (FormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		catch(IOException exc)
+		{
+			IJ.error(exc.getMessage());
+		}
+		return rtnval;
 	}
 
 	@Override
@@ -145,7 +206,7 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 		
 		if (rtn_idx<0) return;
 		
-		Roi my_roi=new Roi(ROI_list[rtn_idx][1],ROI_list[rtn_idx][2],ROI_list[rtn_idx][3],ROI_list[rtn_idx][4]);
+		Roi my_roi=new Roi(the_ROI_list[rtn_idx].x_origin,the_ROI_list[rtn_idx].y_origin,the_ROI_list[rtn_idx].width_in_overview,the_ROI_list[rtn_idx].height_in_overview);
 		
 		RoiManager manager=RoiManager.getInstance();
 		
@@ -170,7 +231,7 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 	{
 		for (int i=0; i<n_rois; i++)
 		{
-			if (ROI_list[i][1]<=x&&ROI_list[i][1]+ROI_list[i][3]>=x&&ROI_list[i][2]<=y&&ROI_list[i][2]+ROI_list[i][4]>=y) return i;
+			if (the_ROI_list[i].x_origin<=x&&the_ROI_list[i].x_origin+the_ROI_list[i].width_in_overview>=x&&the_ROI_list[i].y_origin<=y&&the_ROI_list[i].y_origin+the_ROI_list[i].height_in_overview>=y) return i;
 		}
 		return -1;
 	}
@@ -208,24 +269,31 @@ public class VSI_Reader_SMC_Slow implements KeyListener, MouseListener, PlugIn {
 		{
 			canvas.removeMouseListener(this);
 		    canvas.removeKeyListener(this);
-		    
+		    String concat_list="";
 		    if (master_list.size()>0)
 		    {
 		    	int max_width=0;
 		    	int max_height=0;
 		    	for (int i=0; i<master_list.size(); i++)
 				{
-					if (ROI_list[master_list.get(i)][5]>max_width) max_width=ROI_list[master_list.get(i)][5];
-					if (ROI_list[master_list.get(i)][6]>max_height) max_height=ROI_list[master_list.get(i)][6];
+					if (the_ROI_list[master_list.get(i)].width_in_original>max_width) max_width=the_ROI_list[master_list.get(i)].width_in_original;
+					if (the_ROI_list[master_list.get(i)].height_in_original>max_height) max_height=the_ROI_list[master_list.get(i)].height_in_original;
 		    		
 		    	}
+		    	
 		    	for (int i=0; i<master_list.size(); i++)
 				{
-					String fname="Image_"+IJ.pad(ROI_list[master_list.get(i)][0],2)+".vsi";
+					String fname="Image_"+IJ.pad(the_ROI_list[master_list.get(i)].file_index,2)+".vsi";
 					IJ.run("Bio-Formats Importer", "open="+start_dir+fname+" color_mode=Default view=Hyperstack stack_order=XYCZT series_1");
 					IJ.run("Canvas Size...", "width="+max_width+" height="+max_height+" position=Center");
+					WindowManager.getCurrentImage().setTitle("img"+(i+1));
+					the_ROI_list[master_list.get(i)].img_name=WindowManager.getCurrentImage().getTitle();
+					concat_list=concat_list+"image"+(i+1)+"="+the_ROI_list[master_list.get(i)].img_name+" ";
 		    	}
 		    }
+		    concat_list=concat_list+"image"+(master_list.size()+1)+"=[-- None --]";
+		    IJ.log(concat_list);
+		    IJ.run("Concatenate...", "  title=Concatenated "+concat_list);
 		}
 		if (rtn=='d')
 		{

@@ -22,10 +22,13 @@ public class VSI_Reader_SMC implements PlugIn {
 				new ChannelSeparator(LociPrefs.makeImageReader()));
 		try {
 			try {
-				IJ.log("Trying");
-				r.setId("/home/smc/Data/SMC/OlympusScannerDemo/BatchStella/Folder_20151007/Image_Overview.vsi");
+				
+				
+				r.setId("/home/smc/Data/SMC/OlympusScannerDemo/BatchStella/Folder_20151007/Image_01.vsi");
 				IJ.log("Count, width, height: "+r.getImageCount()+","+r.getSizeX()+","+r.getSizeY());
-				Hashtable<String, Object> metadata = r.getGlobalMetadata();
+				IJ.log("Origin 1:  "+(String)r.getSeriesMetadataValue("Origin #1"));
+				IJ.log("Mag 1:  "+(String)r.getSeriesMetadataValue("Microscope Magnification #1"));
+				Hashtable<String, Object> metadata = r.getSeriesMetadata();
 				Set <String> S=metadata.keySet();
 				Object [] list_array=S.toArray();
 				for (int i=0; i<list_array.length; i++)
