@@ -103,7 +103,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				}
 				w.flush();
 				w.close();
-				IJ.runMacroFile("Call_From_Plugin_Dummy_Stitch.ijm", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+				IJ.runMacroFile("Call_From_Plugin_Dummy_Stitch.ijm", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
 				if (WindowManager.getCurrentImage().getTitle().equals("Fused")) WindowManager.getCurrentImage().setTitle("Fused_"+(j+1));
 				//if(j==0) return;
 			}
