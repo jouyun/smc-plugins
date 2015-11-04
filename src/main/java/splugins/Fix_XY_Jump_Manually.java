@@ -29,11 +29,12 @@ public class Fix_XY_Jump_Manually implements PlugIn {
 		RoiManager manager=RoiManager.getInstance();
 		Roi [] rois = manager.getRoisAsArray();
 		
-		double [] f_vals=new double[slices];
+		double [] f_vals=new double[frames];
 		
 		double [] kf=new double [rois.length];
 		double [] kx=new double[rois.length];
 		double [] ky=new double[rois.length];
+		
 		
 		for (int i=0; i<slices; i++)
 		{
@@ -44,19 +45,29 @@ public class Fix_XY_Jump_Manually implements PlugIn {
 			Polygon p=rois[i].getPolygon();
 			kx[i]=p.xpoints[0];
 			ky[i]=p.ypoints[0];
-			kf[i]=manager.getSliceNumber(manager.getName(i));
-			IJ.log("X,Y,Z: "+kx[i]+","+ky[i]+","+kf[i]);
+			int idx=manager.getSliceNumber(manager.getName(i));
+			kf[i]=(int)Math.floor((idx-1)/slices/channels);
+			//kf[i]=manager.getSliceNumber(manager.getName(i));
+			IJ.log("X,Y,F: "+kx[i]+","+ky[i]+","+kf[i]);
 		}
 		IJ.log("Here");
 
-		for (int i=(int)kf[1]-1; i<slices; i++)
+		for (int i=(int)kf[1]-1; i<frames; i++)
 		{
-			float x=(float) Math.floor(kx[1]-kx[0]);
-			float y=(float) Math.floor(ky[1]-ky[0]);
-			IJ.log("Shift: "+i+","+x+","+y);
-			imp.getStack().getProcessor(i+1).setInterpolationMethod(ImageProcessor.BILINEAR);
-			
-			imp.getStack().getProcessor(i+1).translate(-x, -y);
+			for (int c=0; c<channels; c++)
+			{
+				for (int z=0; z<slices; z++)
+				{
+					float x=(float) Math.floor(kx[1]-kx[0]);
+					float y=(float) Math.floor(ky[1]-ky[0]);
+					IJ.log("Shift: "+i+","+x+","+y);
+					int idx=(i*channels*slices)+z*channels+c+1;
+					imp.getStack().getProcessor(idx).setInterpolationMethod(ImageProcessor.BILINEAR);
+					
+					imp.getStack().getProcessor(idx).translate(-x, -y);
+					
+				}
+			}
 		}
 		imp.updateAndDraw();
 

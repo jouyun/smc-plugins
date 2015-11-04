@@ -346,7 +346,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		x=canvas.offScreenX(x);
 		y=canvas.offScreenY(y);
 		
-		int cur_slice=img.getSlice();
+		int cur_slice=img.getT();
 		My_Frame cur_frame=frame_list.get(cur_slice-1);
 		
 		
