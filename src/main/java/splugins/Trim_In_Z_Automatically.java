@@ -52,7 +52,18 @@ public class Trim_In_Z_Automatically implements PlugIn {
 			}
 		}
 		
-		int num_new_slices=(slices-start_slice);
+		//Find the last slice that has an autocorr that is .05*(max-min) above the min
+		int last_slice=slices-1;
+		for (int z=slices-1; z>0; z--)
+		{
+			if (data[z]>(max-min)*0.05+min)
+			{
+				last_slice=z;
+				break;
+			}
+		}
+		
+		int num_new_slices=(last_slice-start_slice+1);
 		ImagePlus new_imp=NewImage.createFloatImage("Img", width, height, channels*num_new_slices, NewImage.FILL_BLACK);
 		for (int c=0; c<channels; c++)
 		{

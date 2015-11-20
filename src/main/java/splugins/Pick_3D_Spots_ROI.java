@@ -312,6 +312,22 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()-1);
 			WindowManager.setCurrentWindow(imp.getWindow());
 		}
+		if (rtn=='v')
+		{
+			IJ.run("In [+]");
+		}
+		if (rtn=='z')
+		{
+			IJ.run("Out [-]");
+		}
+		if (rtn=='x')
+		{
+			imp.setZ(imp.getZ()-1);
+		}
+		if (rtn=='c')
+		{
+			imp.setZ(imp.getZ()+1);
+		}
 		if (rtn=='d')
 		{
 			//IJ.log("I'm in D");

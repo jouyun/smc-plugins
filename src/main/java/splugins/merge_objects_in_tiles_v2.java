@@ -85,6 +85,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 		
 		int width=img.getWidth(); 
 		int height=img.getHeight();
+		int successful_counter=0;
 		for (int j=0; j<the_list.size(); j++)
 		{
 			try {
@@ -104,7 +105,11 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				w.flush();
 				w.close();
 				IJ.runMacroFile("Call_From_Plugin_Dummy_Stitch.ijm", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
-				if (WindowManager.getCurrentImage().getTitle().equals("Fused")) WindowManager.getCurrentImage().setTitle("Fused_"+(j+1));
+				if (WindowManager.getCurrentImage().getTitle().equals("Fused")) 
+				{
+					WindowManager.getCurrentImage().setTitle("Fused_"+(successful_counter+1));
+					successful_counter++;
+				}
 				//if(j==0) return;
 			}
 			catch (Exception e) {}
@@ -272,7 +277,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				if (data[k+j*width]-average>sigma_ratio*sigma) ctr++;
 			}
 		}
-		//IJ.log("N: "+ctr);
+		IJ.log("N: "+ctr);
 		if (ctr>minimum_over) rtn[0]=true;
 		ctr=0;
 		for (int j=0; j<height; j++)
@@ -282,7 +287,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				if (data[k+j*width]-average>sigma_ratio*sigma) ctr++;
 			}
 		}
-		//IJ.log("W: "+ctr);
+		IJ.log("W: "+ctr);
 		if (ctr>minimum_over) rtn[3]=true;
 		ctr=0;
 		for (int j=height-1; j>=height-borderland; j--)
@@ -292,7 +297,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				if (data[k+j*width]-average>sigma_ratio*sigma) ctr++;
 			}
 		}
-		//IJ.log("S: "+ctr);
+		IJ.log("S: "+ctr);
 		if (ctr>minimum_over) rtn[2]=true;
 		ctr=0;
 		for (int j=0; j<height; j++)
@@ -302,7 +307,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 				if (data[k+j*width]-average>sigma_ratio*sigma) ctr++;
 			}
 		}
-		//IJ.log("E: "+ctr);
+		IJ.log("E: "+ctr);
 		if (ctr>minimum_over) rtn[1]=true;
 		return rtn;
 	}

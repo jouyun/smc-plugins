@@ -19,6 +19,7 @@ import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.process.ShortProcessor;
+import ij.text.TextWindow;
 import ij.*;
 import ij.process.*;
 import ij.gui.*;
@@ -80,6 +81,8 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
 	float current_peak;
 	float drop_threshold;
 	float min_threshold;
+	float min_object_size;
+	float max_object_size;
 	class MyIntPoint
 	{
 		int x;
@@ -90,9 +93,16 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
 			x=a;
 			y=b;
 		}
+		MyIntPoint(MyIntPoint a)
+		{
+			x=a.x;
+			y=a.y;
+			z=a.z;
+		}
 	}
 	ArrayList <MyIntPoint> point_list=new ArrayList <MyIntPoint>();
 	ArrayList <MyIntPoint> tmp_point_list=new ArrayList <MyIntPoint>();
+	ArrayList <ArrayList <MyIntPoint>> cumulative_point_list=new ArrayList <ArrayList <MyIntPoint>>();
 	byte[] output_array;
 	float [] input_array;
 	public void run(String arg)
@@ -103,10 +113,17 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
 		dlg.addNumericField("Background", 270, 0);
 		dlg.addNumericField("Drop threshold", 0.2, 1);
 		dlg.addNumericField("Minimum threshold", -150.0, 1);
+		dlg.addCheckbox("Quantify Results?", false);
+		dlg.addNumericField("Minimum size of quantified object:  ", 5, 0);
+		dlg.addNumericField("Maximum size of quantified object:  ", 20, 0);
+		
 		dlg.showDialog();
 		noise_background=(float) dlg.getNextNumber();
 		drop_threshold=(float)dlg.getNextNumber();
 		min_threshold=(float)dlg.getNextNumber();
+		boolean quantify= dlg.getNextBoolean();
+		min_object_size=(float) dlg.getNextNumber();
+		max_object_size=(float) dlg.getNextNumber();
 		
 		imp=WindowManager.getCurrentImage();
 		width=imp.getWidth(); 
@@ -139,6 +156,8 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
         	
             for (int i=0; i<points.length; i++)
             {
+            	ArrayList <MyIntPoint> this_cumulative=new ArrayList <MyIntPoint> ();
+            	
         		int grow_from_x=(int) points[i][1], grow_from_y=(int) points[i][2];
         		if (output_array[grow_from_y*width+grow_from_x]>0) continue;
         		current_peak=input_array[grow_from_y*width+grow_from_x];
@@ -156,6 +175,8 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
         				if (check_neighbor(curpt.x-1, curpt.y)) ctr++;
         				if (check_neighbor(curpt.x, curpt.y+1)) ctr++;
         				if (check_neighbor(curpt.x, curpt.y-1)) ctr++;
+        				
+        				this_cumulative.add(new MyIntPoint (curpt));
         			}
         			point_list.clear();
         			for (ListIterator jF=tmp_point_list.listIterator();jF.hasNext();)
@@ -165,13 +186,17 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
         			}
         			tmp_point_list.clear();
         			if (ctr==0) done=true;
-        		
+        		}
+        		if (this_cumulative.size()>=min_object_size&&this_cumulative.size()<=max_object_size)
+        		{
+        			cumulative_point_list.add(this_cumulative);
         		}
             }
         	new_img.show();
             new_img.updateAndDraw();
         }
         
+        if (quantify) quantify_channels();
 	}
 	boolean check_neighbor(int x, int y)
 	{
@@ -184,5 +209,43 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
 		MyIntPoint curpt=new MyIntPoint(x, y);
 		tmp_point_list.add(curpt);
 		return true;
+	}
+	void quantify_channels()
+	{
+		ResultsTable rslt;
+		Frame window=WindowManager.getFrame("FRET Results");
+		if (window==null) 
+		{
+			rslt=new ResultsTable();
+		}
+		else
+		{
+			rslt=((TextWindow)window).getTextPanel().getResultsTable();
+		}
+		int ctr=1;
+		
+		for (ListIterator jF=cumulative_point_list.listIterator();jF.hasNext();)
+		{
+			ArrayList <MyIntPoint> curlist=(ArrayList<MyIntPoint>)jF.next();
+			rslt.incrementCounter();
+			rslt.addValue("Image", imp.getTitle());
+			rslt.addValue("Object", ctr);
+			rslt.addValue("X", curlist.get(0).x);
+			rslt.addValue("Y", curlist.get(0).y);
+			for (int c=0; c<channels; c++)
+			{
+				float accumulator=0;
+				float [] pix=(float [])imp.getStack().getProcessor(1+c+cur_slice*channels+cur_frame*channels*slices).getPixels();
+				for (ListIterator subF=curlist.listIterator(); subF.hasNext();)
+				{
+					MyIntPoint mypt=(MyIntPoint) subF.next();
+					accumulator+=pix[mypt.x+mypt.y*width];
+				}
+				rslt.addValue("Mean_"+(c+1), accumulator/curlist.size());
+			}
+			ctr++;
+			
+		}
+		rslt.show("FRET Results");
 	}
 }

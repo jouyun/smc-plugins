@@ -46,7 +46,7 @@ public class Fix_XY_Jump_Manually implements PlugIn {
 			kx[i]=p.xpoints[0];
 			ky[i]=p.ypoints[0];
 			int idx=manager.getSliceNumber(manager.getName(i));
-			kf[i]=(int)Math.floor((idx-1)/slices/channels);
+			kf[i]=(int)Math.floor((idx-1)/slices/channels)+1;
 			//kf[i]=manager.getSliceNumber(manager.getName(i));
 			IJ.log("X,Y,F: "+kx[i]+","+ky[i]+","+kf[i]);
 		}
