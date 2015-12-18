@@ -136,9 +136,22 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 	
 	public String generate_full_file_name(String direc, int tray, int slide, int counter)
 	{
-		String rtn=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(counter, 2)+File.separator+"Image_01.vsi";
+		//First have to figure out name of this folder's contained vsi file (it VARIES for no obvious reason!)
+		String fname=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(counter, 2)+File.separator;
+		File[] file_list=(new File(fname)).listFiles();
+		String[] file_names=new String[file_list.length];
+		for (int i=0; i<file_list.length; i++) 
+		{
+			if (file_list[i].getName().endsWith(".vsi"))
+			{
+				fname=fname+file_list[i].getName();
+				break;
+			}
+		}
+		//String rtn=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(counter, 2)+File.separator+"Image_01.vsi";
+		
 		String tmp=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(counter, 2)+File.separator;
-		return(rtn);
+		return(fname);
 	}
 	
 	public String generate_full_file_overview_name(String direc, int tray, int slide)
