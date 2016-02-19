@@ -70,7 +70,7 @@ public class Trim_In_Z_Automatically implements PlugIn {
 			for (int z=0; z<num_new_slices; z++)
 			{
 				float [] new_pix=(float []) new_imp.getStack().getPixels(c+z*channels+1);
-				float [] pix=(float []) img.getStack().getPixels(c+(z+start_slice)*channels+1);
+				float [] pix=(float []) img.getStack().getProcessor(c+(z+start_slice)*channels+1).convertToFloat().getPixels();
 				for (int p=0; p<width*height; p++)
 				{
 					new_pix[p]=pix[p];

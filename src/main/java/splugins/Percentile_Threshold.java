@@ -96,7 +96,7 @@ public class Percentile_Threshold implements PlugIn{
 	{
 		
 		
-		double [] tmp=find_average_sigma(pix, width, height, prctile, SNR);
+		double [] tmp=find_average_sigma(pix, width, height, prctile);
 		double average=tmp[0];
 		double sigma=tmp[1];
 		
@@ -116,7 +116,7 @@ public class Percentile_Threshold implements PlugIn{
 		return new_pix;
 	}
 	
-	public static double [] find_average_sigma(float [] pix, int width, int height, float prctile, float SNR)
+	public static double [] find_average_sigma(float [] pix, int width, int height, float prctile)
 	{
 		List <Float> stk=new ArrayList<Float>();
 		

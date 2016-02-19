@@ -178,7 +178,7 @@ public class merge_objects_in_tiles_v2 implements PlugIn {
 			}
 		}
 		float [] pix=(float [])img.getStack().getProcessor(current_channel+current_slice*channels+channels*slices*smallest_index+1).convertToFloat().getPixels();
-		double[] vals=Percentile_Threshold.find_average_sigma(pix, width, height, 10, sigma_ratio);
+		double[] vals=Percentile_Threshold.find_average_sigma(pix, width, height, 10);
 		average=vals[0];
 		sigma=vals[1];
 		//average=smallest_total/(double)(width*height);

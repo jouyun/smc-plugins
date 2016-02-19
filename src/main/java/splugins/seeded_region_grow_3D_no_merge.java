@@ -24,7 +24,8 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 	int frames;
 	int channels;
 	int current_seed;
-	int points_added;
+	int minimum_pix;
+	int maximum_pix;
 	byte color_idx;
 	
 	float [][][] whole_byte_img;
@@ -34,6 +35,7 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 	float noise_background;
 	float drop_threshold;
 	float [] peak_intensities;
+	float [] points_added;
 	
 	class MyIntPoint
 	{
@@ -61,6 +63,7 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 	}
 	ArrayList <ArrayList <MyIntPoint>> point_list=new ArrayList<ArrayList <MyIntPoint>>();
 	ArrayList <MyIntPoint> tmp_point_list=new ArrayList <MyIntPoint>();
+	ArrayList <MyIntPoint> object_point_list[];
 	
 	public void run(String arg) {
 		
@@ -76,12 +79,19 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
         MyIntPoint [] seed_points=retrieve_seeds();
         whole_byte_img=new float[width][height][slices];
         peak_intensities=new float[seed_points.length];
+        points_added=new float[seed_points.length];
         for (int i=0; i<seed_points.length; i++)
         {
         	MyIntPoint tmp=seed_points[i];
         	whole_byte_img[tmp.x][tmp.y][tmp.z]=(byte) (i+1);
         }
         int number_seeds=seed_points.length;
+        object_point_list=(ArrayList<MyIntPoint>[]) new ArrayList[number_seeds];
+        for (int i=0; i<seed_points.length; i++)
+        {
+        	object_point_list[i]=new ArrayList<MyIntPoint>();
+        }
+        
         raw_data=Dilate3D.make_3D_float_3D(imp,  0,  0);
 
         for (int i=0; i<seed_points.length; i++)
@@ -91,8 +101,9 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
         	tmp_list.add(tmp_pt);
         	point_list.add(tmp_list);
         	peak_intensities[i]=raw_data[tmp_pt.x][tmp_pt.y][tmp_pt.z];
+        	
+        	object_point_list[i].add(tmp_pt);
         }
-        points_added=0;
         color_idx=0;
         boolean done=false;
 		while (!done)
@@ -133,6 +144,18 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 			}
 			if (ctr==0) done=true;
 		}
+
+        for (int i=0; i<seed_points.length; i++)
+        {
+        	if (object_point_list[i].size()<minimum_pix||object_point_list[i].size()>maximum_pix)
+        	{
+        		for (ListIterator pF=object_point_list[i].listIterator(); pF.hasNext();)
+        		{
+        			MyIntPoint curpt=(MyIntPoint)pF.next();
+        			whole_byte_img[curpt.x][curpt.y][curpt.z]=0;
+        		}
+        	}
+        }
 		ImagePlus new_img=Dilate3D.make_3D_ImagePlusFloat3D(whole_byte_img, width, height, imp.getStackSize());
         new_img.show();
         new_img.updateAndDraw();
@@ -156,6 +179,8 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 		gd.addNumericField("Threshold", 1000, 1);
 		gd.addNumericField("Noise background", 0, 1);
 		gd.addNumericField("Drop Threshold", 0.2, 1);
+		gd.addNumericField("Minimum size", 30, 0);
+		gd.addNumericField("Maximum size", 500, 0);
 		gd.showDialog();
 		if (gd.wasCanceled()) 
 		{
@@ -170,6 +195,8 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 		threshold=(float)gd.getNextNumber();
 		noise_background=(float)gd.getNextNumber();
 		drop_threshold=(float)gd.getNextNumber();
+		minimum_pix=(int)gd.getNextNumber();
+		maximum_pix=(int)gd.getNextNumber();
 		return find_mask_points(mask_img);
 	}
 	
@@ -234,11 +261,13 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 		if (raw_data[x][y][z]-noise_background<(peak_intensities[current_seed-1]-noise_background)*drop_threshold) return false;
 		if (raw_data[x][y][z]<threshold) return false;
 		if (whole_byte_img[x][y][z]!=0) return false;
-		//whole_byte_img[x][y][z]=(byte)current_seed;
-		whole_byte_img[x][y][z]=(float)(points_added);
+		whole_byte_img[x][y][z]=current_seed;
+		//whole_byte_img[x][y][z]=(float)(points_added);
 		MyIntPoint curpt=new MyIntPoint(x, y,z);
 		tmp_point_list.add(curpt);
-		points_added++;
+		
+		object_point_list[current_seed-1].add(new MyIntPoint(x,y,z));
+		
 		return true;
 	}
 }

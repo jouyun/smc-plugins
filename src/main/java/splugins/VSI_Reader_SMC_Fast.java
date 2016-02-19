@@ -104,9 +104,16 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 			tmp_ctr++;
 		}
 		//Concatenate it
-		concat_list=concat_list+"image"+tmp_ctr+"=[-- None --]";
-		IJ.log(concat_list);
-		IJ.run("Concatenate...", "  title=Concatenated "+concat_list);
+		if (frame_list.size()>1)
+		{
+			concat_list=concat_list+"image"+tmp_ctr+"=[-- None --]";
+			IJ.log(concat_list);
+			IJ.run("Concatenate...", "  title=Concatenated "+concat_list);
+		}
+		else
+		{
+			WindowManager.getCurrentImage().setTitle("Concatenated");
+		}
 		IJ.run("16-bit");
 		img=WindowManager.getCurrentImage();
 		
@@ -378,7 +385,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		}
 		
 		manager.addRoi(my_roi);
-		//manager.runCommand("Show All");
+		manager.runCommand("Show All");
 		manager.select(manager.getCount()-1);
 		
 		master_list.add(the_ROI);
