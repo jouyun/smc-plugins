@@ -174,14 +174,16 @@ public class compute_3D_blob_statistics implements PlugIn {
 		for (ListIterator pF=list.listIterator(); pF.hasNext();)
 		{
 			MyIntPoint curpt=(MyIntPoint)pF.next();
-			num_points++;
-			if (totals[1]/num_points>threshold)
+			float tmp=totals[1]/num_points;
+			if (tmp>threshold)
 			{
-				data[curpt.x][curpt.y][curpt.z][2]=255;
+				//data[curpt.x][curpt.y][curpt.z][2]=255;
+				data[curpt.x][curpt.y][curpt.z][2]=tmp;
 			}
 			else
 			{
-				data[curpt.x][curpt.y][curpt.z][2]=128;
+				//data[curpt.x][curpt.y][curpt.z][2]=128;
+				data[curpt.x][curpt.y][curpt.z][2]=tmp;
 			}
 		}
 	}
@@ -222,7 +224,7 @@ public class compute_3D_blob_statistics implements PlugIn {
 			{
 				for (int y=0; y<height; y++)
 				{
-					int pix_val=pix[y*width+x];
+					int pix_val=pix[y*width+x]&0xffff;
 					if (pix_val!=0)
 					{
 						MyIntPoint tmp=new MyIntPoint();
