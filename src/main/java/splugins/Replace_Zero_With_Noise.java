@@ -1,5 +1,6 @@
 package splugins;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
@@ -24,26 +25,31 @@ public class Replace_Zero_With_Noise implements PlugIn {
 			{
 				for (int i=0; i<myimg.getStackSize(); i++)
 				{
-					do_replace(myimg.getStack().getProcessor(i+1), 0.0f, base, spread);
+					do_replace32(myimg.getStack().getProcessor(i+1), 0.0f, base, spread);
 				}	
+				break;
 			}
 			case ImagePlus.GRAY8:
 			{
 				for (int i=0; i<myimg.getStackSize(); i++)
 				{
-					do_replace(myimg.getStack().getProcessor(i+1), (byte)0, (byte)base, (byte)spread);
+					do_replace8(myimg.getStack().getProcessor(i+1), (byte)0, (byte)base, (byte)spread);
 				}
+				break;
 			}
 			case ImagePlus.GRAY16:
 			{
 				for (int i=0; i<myimg.getStackSize(); i++)
 				{
-					do_replace(myimg.getStack().getProcessor(i+1), (short)0, (short)base, (short)spread);
+					do_replace16(myimg.getStack().getProcessor(i+1), (short)0, (short)base, (short)spread);
 				}
+				break;
 			}
+			default:
+			{}
 		}
 	}
-	public static void do_replace(ImageProcessor ip, float to_replace, float init, float last)
+	public static void do_replace32(ImageProcessor ip, float to_replace, float init, float last)
 	{
 		float [] pix=(float []) ip.getPixels();
 		int width=ip.getWidth(), height=ip.getHeight();
@@ -55,7 +61,7 @@ public class Replace_Zero_With_Noise implements PlugIn {
 			}
 		}
 	}
-	public static void do_replace(ImageProcessor ip, byte to_replace, byte init, byte last)
+	public static void do_replace8(ImageProcessor ip, byte to_replace, byte init, byte last)
 	{
 		byte [] pix=(byte []) ip.getPixels();
 		int width=ip.getWidth(), height=ip.getHeight();
@@ -67,7 +73,7 @@ public class Replace_Zero_With_Noise implements PlugIn {
 			}
 		}
 	}
-	public static void do_replace(ImageProcessor ip, short to_replace, short init, short last)
+	public static void do_replace16(ImageProcessor ip, short to_replace, short init, short last)
 	{
 		short [] pix=(short []) ip.getPixels();
 		int width=ip.getWidth(), height=ip.getHeight();

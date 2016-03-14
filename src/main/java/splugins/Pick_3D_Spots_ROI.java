@@ -32,6 +32,8 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		imp=WindowManager.getCurrentImage();
 		win = imp.getWindow();
         canvas = win.getCanvas();
+        IJ.run("32-bit");
+        imp.setDisplayMode(IJ.COMPOSITE);
         
         win.removeKeyListener(IJ.getInstance());
         canvas.removeKeyListener(IJ.getInstance());
@@ -50,8 +52,8 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
         cur_frame=imp.getFrame()-1;
         cur_slice=imp.getSlice()-1;
         
-        draw_radius=100;
-        draw_inner_radius=64;
+        draw_radius=1200;
+        draw_inner_radius=800;
         
         backup_data=new float[frames][slices][channels][width*height];
         for (int f=0; f<frames; f++)
@@ -144,7 +146,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		}
 		
 		
-		float val=10000;
+		float val=100000;
 		
 		int current_slice=imp.getSlice()-1;
 		int current_channel=imp.getChannel()-1;

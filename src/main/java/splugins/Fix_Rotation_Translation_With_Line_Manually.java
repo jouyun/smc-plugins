@@ -54,7 +54,7 @@ public class Fix_Rotation_Translation_With_Line_Manually implements PlugIn{
 			ImageProcessor tmp=imp.getStack().getProcessor(i+1);
 			tmp.setInterpolationMethod(ImageProcessor.BICUBIC);
 			tmp.translate(x, y);
-			tmp.rotate(k_angle[i]);
+			tmp.rotate(k_angle[i]+90);
 		}
 		imp.updateAndDraw();
 		

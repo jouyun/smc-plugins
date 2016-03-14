@@ -143,6 +143,7 @@ public class Dilate3D {
 		int depth=img.getNSlices();
 		int channels=img.getNChannels();
 		float [][][][] pix=new float[width][height][depth][channels];
+		IJ.log("Done allocating");
 		for (int c=0; c<channels; c++)
 		{
 			for (int i=0; i<depth; i++)	

@@ -17,6 +17,7 @@ import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
+import ij.io.FileSaver;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
 import loci.formats.ChannelSeparator;
@@ -82,13 +83,24 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 	ROI_List [] the_ROI_list;
 	My_ROI [][][] full_ROI_list;
 	ArrayList <My_Frame> frame_list;
+	boolean high_label;
+	boolean create_stack;
+	String output_path;
 	@Override
 	public void run(String arg0) {
 		
 		String base_directory=IJ.getDirectory("");
+
+		GenericDialog gd=new GenericDialog("Have label image?");
+		gd.addCheckbox("Have high res image of label?", false);
+		gd.showDialog();
+		high_label=gd.getNextBoolean();
+		int overview_series=4;
+		if (high_label) overview_series=9;
 		
 		//Populate organizational database
 		get_frame_list(base_directory);
+		
 		
 		/************Get overview stack**************/
 		String concat_list="";
@@ -97,8 +109,10 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		{
 			My_Frame cur_frame=jF.next();
 			IJ.log("Doing frame: "+cur_frame.frame+","+cur_frame.tray+","+cur_frame.slide);
-			String base_file=base_directory+File.separator+prelude+IJ.pad(cur_frame.tray, 2)+"_"+IJ.pad(cur_frame.slide, 2)+"_"+IJ.pad(1, 2)+File.separator+"Image_Overview.vsi";
-			IJ.run("Bio-Formats Importer", "open="+base_file+" color_mode=Default view=Hyperstack stack_order=XYCZT series_4");
+			String base_file=generate_full_file_name(base_directory, cur_frame.tray, cur_frame.slide, 1);
+			IJ.log(base_file);
+			//String base_file=base_directory+File.separator+prelude+IJ.pad(cur_frame.tray, 2)+"_"+IJ.pad(cur_frame.slide, 2)+"_"+IJ.pad(1, 2)+File.separator+"Image_Overview.vsi";
+			IJ.run("Bio-Formats Importer", "open="+base_file+" color_mode=Default view=Hyperstack stack_order=XYCZT series_"+overview_series);
 			WindowManager.getCurrentImage().setTitle("img"+(tmp_ctr));
 			concat_list=concat_list+"image"+tmp_ctr+"="+WindowManager.getCurrentImage().getTitle()+" ";
 			tmp_ctr++;
@@ -163,9 +177,10 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 	
 	public String generate_full_file_overview_name(String direc, int tray, int slide)
 	{
-		String rtn=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(1, 2)+File.separator+"Image_Overview.vsi";
+		/*String rtn=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(1, 2)+File.separator+"Image_Overview.vsi";
 		String tmp=direc+prelude+IJ.pad(tray, 2)+"_"+IJ.pad(slide, 2)+"_"+IJ.pad(1, 2)+File.separator;
-		return(rtn);
+		return(rtn);*/
+		return(generate_full_file_name( direc, tray, slide, 1));
 	}
 	
 	public void paint_box(short [] pix, int x0, int y0, int w, int h, int wmax, int hmax)
@@ -223,7 +238,9 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 				//and that should not be included in the list of high-res images
 				
 				//Also since this is definitely an overview image we should get the overview_pw, etc.
-				Meta_Data meta=get_meta_data(generate_full_file_overview_name(fname, cur_loc.tray, cur_loc.slide));
+				int series=0;
+				if (high_label) series=5;
+				Meta_Data meta=get_meta_data(generate_full_file_overview_name(fname, cur_loc.tray, cur_loc.slide), series);
 				overview_pw=meta.pixel_size*8;
 				top_left_overview_x=meta.origin_x;
 				top_left_overview_y=meta.origin_y;
@@ -284,7 +301,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		
 		IJ.log(fname);
 		
-		Meta_Data meta=get_meta_data(fname);
+		Meta_Data meta=get_meta_data(fname,0);
 		
 		double zoom_pw=meta.pixel_size;
 		int wid=meta.width;
@@ -313,7 +330,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		return rtn;
 	}
 	
-	public Meta_Data get_meta_data(String fname)
+	public Meta_Data get_meta_data(String fname, int series)
 	{
 		ImageProcessorReader r = new ImageProcessorReader(
 				new ChannelSeparator(LociPrefs.makeImageReader()));
@@ -323,6 +340,9 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 				
 				
 				r.setId(fname);
+				IJ.log("Series count: "+r.getSeriesCount()+","+r.getSeries());
+				r.setSeries(series);
+				IJ.log("Current series: "+r.getSeries());
 				rtnval.height=r.getSizeY();
 				rtnval.width=r.getSizeX();
 				
@@ -337,7 +357,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 				rtnval.origin_y=Double.parseDouble(origin_y);
 				rtnval.pixel_size=Double.parseDouble(calib);
 				
-				//IJ.log("wid, hei, ox, oy, pix:  "+rtnval.width+","+rtnval.height+","+rtnval.origin_x+","+rtnval.origin_y+","+rtnval.pixel_size);
+				IJ.log("wid, hei, ox, oy, pix:  "+rtnval.width+","+rtnval.height+","+rtnval.origin_x+","+rtnval.origin_y+","+rtnval.pixel_size);
 				
 			} catch (FormatException e) {
 				// TODO Auto-generated catch block
@@ -366,8 +386,11 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		x=canvas.offScreenX(x);
 		y=canvas.offScreenY(y);
 		
-		int cur_slice=img.getT();
+		int cur_slice=1;
+		if (img.getNFrames()>1) cur_slice=img.getT();
+		else cur_slice=img.getSlice();
 		My_Frame cur_frame=frame_list.get(cur_slice-1);
+		IJ.log("Current T: "+cur_slice);
 		
 		
 		My_ROI the_ROI=find_ROI_containing(cur_frame, x, y);
@@ -446,9 +469,13 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		if (rtn=='m')
 		{
 			GenericDialog gd=new GenericDialog("Zoom factor");
+			gd.addCheckbox("Create a stack out of images?", true);
+			gd.addStringField("Directory for saving: ", "");
 			gd.addNumericField("Zoom of highress:  ", 1, 0);
 			gd.showDialog();
 			int dezoom_scale=(int)Math.floor(gd.getNextNumber());
+			create_stack=gd.getNextBoolean();
+			output_path=gd.getNextString();
 			
 		    String concat_list="";
 		    if (master_list.size()>0)
@@ -466,14 +493,29 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 				{
 		    		My_ROI r=master_list.get(i);
 					IJ.run("Bio-Formats Importer", "open="+r.fname+" color_mode=Default view=Hyperstack stack_order=XYCZT series_"+dezoom_scale);
-					IJ.run("Canvas Size...", "width="+max_width+" height="+max_height+" position=Center");
-					WindowManager.getCurrentImage().setTitle("img"+(i+1));
-					concat_list=concat_list+"image"+(i+1)+"="+WindowManager.getCurrentImage().getTitle()+" ";
+					if (create_stack)
+					{
+						IJ.run("Canvas Size...", "width="+max_width+" height="+max_height+" position=Center");
+						WindowManager.getCurrentImage().setTitle("img"+(i+1));
+						//concat_list=concat_list+"image"+(i+1)+"="+WindowManager.getCurrentImage().getTitle()+" ";
+						FileSaver save=new FileSaver(WindowManager.getCurrentImage());
+						save.saveAsTiff(output_path+File.separator+"Image_"+IJ.pad(i, 3)+".tif");
+						WindowManager.getCurrentImage().close();
+					}
+					else
+					{
+						FileSaver save=new FileSaver(WindowManager.getCurrentImage());
+						save.saveAsTiff(output_path+File.separator+"Image_"+IJ.pad(i, 3)+".tif");
+						WindowManager.getCurrentImage().close();
+					}
 		    	}
 		    }
-		    concat_list=concat_list+"image"+(master_list.size()+1)+"=[-- None --]";
-		    IJ.log(concat_list);
-		    IJ.run("Concatenate...", "  title=Concatenated "+concat_list);
+		    if (create_stack)
+		    {
+		    	/*concat_list=concat_list+"image"+(master_list.size()+1)+"=[-- None --]";
+		    	IJ.log(concat_list);
+		    	IJ.run("Concatenate...", "  title=Concatenated "+concat_list);*/
+		    }
 		}
 		if (rtn=='d')
 		{
