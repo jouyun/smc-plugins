@@ -3,7 +3,7 @@ package splugins;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import fiji.plugins.FJ_Options;
+//import fiji.plugins.FJ_Options;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;

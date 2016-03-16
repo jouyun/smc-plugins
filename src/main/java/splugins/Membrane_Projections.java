@@ -36,6 +36,7 @@ public class Membrane_Projections implements PlugIn {
 		cur_channel=imp.getChannel()-1;
 		
 		nAngles=30;
+		addMembraneFeatures(19,1);
 		
 	}	
 	
@@ -53,13 +54,13 @@ public class Membrane_Projections implements PlugIn {
 			for (int y=0; y<patchSize; y++)
 				membranePatch.setf(x, y, 1f);
 											
-		ImageStack rotatedPatches=new ImageStack();
+		ImageProcessor [] rotatedPatches=new ImageProcessor[nAngles];
 	    final double rotationAngle = 180/nAngles;
 		for (int i=0; i<nAngles; i++)
 		{
 			ImageProcessor cur=membranePatch.duplicate();
 			cur.rotate(i*rotationAngle);
-			rotatedPatches.addSlice(cur);			
+			rotatedPatches[i]=cur;
 		}
 
 	    
@@ -73,26 +74,38 @@ public class Membrane_Projections implements PlugIn {
 			{
 				for (int c=0; c<channels; c++)
 				{
-					ImageStack proj_stack=new ImageStack();		
+					ImageStack proj_stack=new ImageStack(width,height);		
 							
 					for (int i=0; i<nAngles; i++)
 					{
-						ImageProcessor curI=imp.getStack().getProcessor(1+c+s*channels+f*channels*slices);
-						float [] kernel=(float[])(rotatedPatches.getProcessor(i+1).getPixels());
+						ImageProcessor curI=imp.getStack().getProcessor(1+c+s*channels+f*channels*slices).duplicate();
+						float [] kernel=(float[])(rotatedPatches[i].getPixels());
 						con.convolveFloat(curI, kernel, patchSize, patchSize);
 						proj_stack.addSlice(curI);
 					}
-					ImagePlus display=new ImagePlus("HiThere", proj_stack);
+					/*ImagePlus display=new ImagePlus("HiThere", proj_stack);
 					display.show();
-					display.updateAndDraw();
+					display.updateAndDraw();*/
+					float [] pix=(float [])newimg.getStack().getProcessor(1+c+s*channels+f*channels*slices).getPixels();
+					for (int p=0; p<width*height; p++)
+					{
+						pix[p]=((float [])proj_stack.getProcessor(1).getPixels())[p];
+					}
 					for (int i=0; i<nAngles; i++)
 					{
-						
-						
+						for (int p=0; p<width*height; p++)
+						{
+							float tmp=((float [])proj_stack.getProcessor(i+1).getPixels())[p];
+							if (tmp<pix[p]) pix[p]=tmp;
+						}
 					}
 				}
 			}
 		}
+		newimg.setOpenAsHyperStack(true);
+		newimg.setDimensions(channels,  slices,  frames);
+		newimg.show();
+		newimg.updateAndDraw();
 	}
 
 
