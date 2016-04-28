@@ -118,7 +118,9 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			dummy_list.add(current_list);
 			short [] imgarray=my3D.blobarray_to_imgarray(dummy_list, width, height, depth);
 			//ImagePlus tmpA=my3D.imgarray_to_ip(imgarray, width, height, depth);
-			my3D.dilate_no_merge(imgarray, width, height, depth,2);
+			
+			//my3D.dilate_no_merge(imgarray, width, height, depth,2);
+			
 			//ImagePlus tmpB=my3D.imgarray_to_ip(imgarray, width, height, depth);
 			//tmpA.show();
 			//tmpB.show();
@@ -165,7 +167,8 @@ public class find_colocalization_candidates_3D implements PlugIn {
 			{
 				//if (averages[0]/expanded_averages[0]<1.4) continue;
 				//OLDif (averages[0]/averages[cur_channel]<selection_criteria) continue;
-				if (averages[0]<selection_criteria) continue;
+
+				//if (averages[0]<selection_criteria) continue;
 			}
 			//If meets criteria, log in results
 			the_table.incrementCounter();

@@ -24,6 +24,8 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
 	int width, height, channels, slices, frames, cur_channel, cur_frame, cur_slice;
 	int draw_radius, draw_inner_radius;
 	float [][][][] backup_data;
+	int draw_channel;
+	float val;
 	boolean roi_listening;
 	@Override
 	public void run(String arg0) {
@@ -34,12 +36,12 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
         IJ.run("32-bit");
         imp.setDisplayMode(IJ.COMPOSITE);
         
-        //win.removeKeyListener(IJ.getInstance());
-        //canvas.removeKeyListener(IJ.getInstance());
+        win.removeKeyListener(IJ.getInstance());
+        canvas.removeKeyListener(IJ.getInstance());
         
-        //win.addWindowListener(win);
+        win.addWindowListener(win);
         //canvas.addMouseListener(this);
-        //canvas.addKeyListener(this);
+        canvas.addKeyListener(this);
         
         width=imp.getWidth();
         height=imp.getHeight();
@@ -53,6 +55,7 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
         
         draw_radius=20;
         draw_inner_radius=8;
+        draw_channel=1;
         
         backup_data=new float[frames][slices][channels][width*height];
         for (int f=0; f<frames; f++)
@@ -68,7 +71,7 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
         }
         
       //IJ.log("I'm in D");
-        float val=100000;
+        val=100000;
 		
         RoiManager manager=RoiManager.getInstance();
         for (int r=0; r<manager.getCount(); r++)
@@ -89,11 +92,14 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
     		int t_channel=raw_slice%channels;
     		int t_slice=raw_slice/channels%slices;
     		t_slice=raw_slice;
-    		t_channel=2;
+    		t_channel=draw_channel;
     		ReplaceSpot(x,y,t_channel,t_slice,val);
     		imp.updateAndDraw();
     		IJ.log(("X,Y,Z,C: "+x+","+y+","+t_channel+","+t_slice));
         }
+        RoiManager.getInstance().select(1);
+		WindowManager.setCurrentWindow(imp.getWindow());
+		RoiManager.getInstance().runCommand("Deselect");
 	}
 
 	@Override
@@ -131,43 +137,6 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
 		
 		if (!roi_listening) 
 		{
-			/*IJ.log("Number windows: "+manager.getWindows().length);
-			Window mywin=manager.getWindows()[0];
-			
-			mywin.removeKeyListener(IJ.getInstance());
-			mywin.addKeyListener(this);*/
-			
-			//manager.setKeyListener(this);
-			
-			/*
-			KeyListener[] listers=manager.getKeyListeners();
-			IJ.log("Listeners: "+listers.length);
-			for (int i=0; i<listers.length; i++) manager.removeKeyListener(listers[i]);
-			
-			listers=manager.getKeyListeners();
-			IJ.log("Listeners: "+listers.length);
-			
-			Window [] wins=manager.getWindows();
-			for (int i=0; i<wins.length; i++)
-			{
-				IJ.log(wins[i].getName());
-				if (wins[i].getKeyListeners().length>0)
-				{
-					wins[i].removeKeyListener(wins[i].getKeyListeners()[0]);
-					wins[i].addKeyListener(this);
-				}
-				
-			}
-			
-			for (int i=0; i<manager.getComponentCount(); i++)
-			{
-				for (int j=0; j<manager.getComponent(i).getKeyListeners().length; j++)
-				{
-					manager.getComponent(i).removeKeyListener(manager.getComponent(i).getKeyListeners()[j]);
-				}
-				manager.getComponent(i).addKeyListener(this);
-			}
-			manager.addKeyListener(this);*/
 			roi_listening=true;
 		}
 		
@@ -321,6 +290,7 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
 	public void keyPressed(KeyEvent e) {
 		char rtn;
 		rtn=e.getKeyChar();
+		IJ.log("Key pressed: "+rtn);
 		//if (rtn!='j'&&rtn!='q') return;
 		if (rtn=='q')
 		{
@@ -341,6 +311,7 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
 		}
 		if (rtn=='o')
 		{
+			if (RoiManager.getInstance().getSelectedIndex()==0) return;
 			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()-1);
 			WindowManager.setCurrentWindow(imp.getWindow());
 		}
@@ -363,28 +334,67 @@ public class Label_ROIs_3D implements KeyListener, MouseListener, PlugIn {
 		if (rtn=='d')
 		{
 			//IJ.log("I'm in D");
-			String cur_name=RoiManager.getInstance().getName(RoiManager.getInstance().getSelectedIndex());
-			//IJ.log(cur_name);
-			int fidx=cur_name.indexOf("-");
-			int sidx=cur_name.indexOf("-",fidx+1);
-			/*IJ.log("fidx, sidx: "+fidx+","+sidx);
-			IJ.log(cur_name.substring(0, fidx));
-			IJ.log(cur_name.substring(fidx+1, sidx));
-			IJ.log(cur_name.substring(sidx+1,cur_name.length()));*/
-			int raw_slice=Integer.parseInt(cur_name.substring(0, fidx));
-			int y=Integer.parseInt(cur_name.substring(fidx+1, sidx));
-			int x=Integer.parseInt(cur_name.substring(sidx+1, cur_name.length()));
+			RoiManager manager=RoiManager.getInstance();
+			Roi roi=manager.getRoi(manager.getSelectedIndex());
 			
-			//IJ.log("X,Y,Slice: "+x+","+y+","+raw_slice);
-			raw_slice--;
-			int t_channel=raw_slice%channels;
-			int t_slice=raw_slice/channels%slices;
-			ReplaceSpot(x,y,t_channel,t_slice,0);
-			imp.updateAndDraw();
+    		String cur_name=manager.getName(manager.getSelectedIndex());
+    		Polygon P=roi.getPolygon();
+    		int fidx=cur_name.indexOf("-");
+    		int sidx=cur_name.indexOf("-",fidx+1);
+    		int raw_slice=Integer.parseInt(cur_name.substring(0, fidx));
+    		int y;
+    		int x;
+    		x=P.xpoints[0];
+    		y=P.ypoints[0];
+	    		
+	    	raw_slice--;
+	    	int t_channel;
+	    	int t_slice;
+	    	t_slice=raw_slice;
+	    	t_channel=draw_channel;
+	    	ReplaceSpot(x,y,0,t_slice,0);
+	    	ReplaceSpot(x,y,1,t_slice,0);
+	    	ReplaceSpot(x,y,2,t_slice,0);
+	    	imp.updateAndDraw();
+	    	IJ.log(("X,Y,Z,C: "+x+","+y+","+t_channel+","+t_slice));
 			
 			int current_roi=RoiManager.getInstance().getSelectedIndex();
 			RoiManager.getInstance().runCommand("Delete");
 			RoiManager.getInstance().select(current_roi);
+		}
+		
+		if (rtn=='m')
+		{
+			//IJ.log("I'm in D");
+			RoiManager manager=RoiManager.getInstance();
+			Roi roi=manager.getRoi(manager.getSelectedIndex());
+			
+    		String cur_name=manager.getName(manager.getSelectedIndex());
+    		Polygon P=roi.getPolygon();
+    		int fidx=cur_name.indexOf("-");
+    		int sidx=cur_name.indexOf("-",fidx+1);
+    		int raw_slice=Integer.parseInt(cur_name.substring(0, fidx));
+    		int y;
+    		int x;
+    		x=P.xpoints[0];
+    		y=P.ypoints[0];
+	    		
+	    	raw_slice--;
+	    	int t_channel;
+	    	int t_slice;
+	    	t_slice=raw_slice;
+	    	t_channel=draw_channel;
+	    	ReplaceSpot(x,y,0,t_slice,0);
+	    	ReplaceSpot(x,y,1,t_slice,0);
+	    	ReplaceSpot(x,y,2,t_slice,0);
+			imp.updateAndDraw();
+	    	IJ.log(("X,Y,Z,C: "+x+","+y+","+t_channel+","+t_slice));
+			
+			ReplaceSpot(x,y,0,t_slice,val);
+			imp.updateAndDraw();
+			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()+1);
+			WindowManager.setCurrentWindow(imp.getWindow());
+			
 		}
 		
 		if (rtn=='r')

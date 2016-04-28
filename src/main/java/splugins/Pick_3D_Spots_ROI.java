@@ -3,6 +3,7 @@ package splugins;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
@@ -41,6 +42,8 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
         win.addWindowListener(win);
         canvas.addMouseListener(this);
         canvas.addKeyListener(this);
+        win.addKeyListener(this);
+        win.addMouseListener(this);
         
         width=imp.getWidth();
         height=imp.getHeight();
@@ -52,8 +55,12 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
         cur_frame=imp.getFrame()-1;
         cur_slice=imp.getSlice()-1;
         
-        draw_radius=1200;
-        draw_inner_radius=800;
+        GenericDialog gd=new GenericDialog("Choose parameters");
+        gd.addNumericField("Drawn radius", 30, 1);
+        gd.showDialog();
+        double radius=gd.getNextNumber();
+        draw_radius=(int)Math.ceil((radius+1)*(radius+1));
+        draw_inner_radius=(int)Math.floor((radius-1)*(radius-1));
         
         backup_data=new float[frames][slices][channels][width*height];
         for (int f=0; f<frames; f++)
@@ -154,6 +161,8 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		ReplaceSpot(x,y,current_channel, current_slice, val);
 		
 		manager.addRoi(my_roi);
+		RoiManager.getInstance().select(RoiManager.getInstance().getCount()-1);
+		WindowManager.setCurrentWindow(imp.getWindow());
 
 		imp.updateAndDraw();
 	}
@@ -311,7 +320,8 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 		}
 		if (rtn=='o')
 		{
-			RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()-1);
+			if (RoiManager.getInstance().getSelectedIndex()==-1) RoiManager.getInstance().select(RoiManager.getInstance().getCount()-1);
+			else RoiManager.getInstance().select(RoiManager.getInstance().getSelectedIndex()-1);
 			WindowManager.setCurrentWindow(imp.getWindow());
 		}
 		if (rtn=='v')
@@ -354,7 +364,7 @@ public class Pick_3D_Spots_ROI implements KeyListener, MouseListener, PlugIn {
 			
 			int current_roi=RoiManager.getInstance().getSelectedIndex();
 			RoiManager.getInstance().runCommand("Delete");
-			RoiManager.getInstance().select(current_roi);
+			RoiManager.getInstance().select(current_roi-1);
 		}
 		
 		if (rtn=='r')

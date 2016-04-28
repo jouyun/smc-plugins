@@ -33,13 +33,13 @@ public class Fix_XY_Drift_Manually implements PlugIn {
 		RoiManager manager=RoiManager.getInstance();
 		Roi [] rois = manager.getRoisAsArray();
 		
-		double [] f_vals=new double[slices];
+		double [] f_vals=new double[frames];
 		
 		double [] kf=new double [rois.length];
 		double [] kx=new double[rois.length];
 		double [] ky=new double[rois.length];
 		
-		for (int i=0; i<slices; i++)
+		for (int i=0; i<frames; i++)
 		{
 			f_vals[i]=i+1;
 		}
@@ -54,7 +54,7 @@ public class Fix_XY_Drift_Manually implements PlugIn {
 		double [] x_vals=Fix_Z_Drift_Manually.linear_extrapolate_interpolate(kf, kx, f_vals);
 		double [] y_vals=Fix_Z_Drift_Manually.linear_extrapolate_interpolate(kf, ky, f_vals);
 		
-		for (int i=0; i<slices; i++)
+		for (int i=0; i<frames; i++)
 		{
 			float x=(float) (x_vals[i]-x_vals[0]);
 			float y=(float) (y_vals[i]-y_vals[0]);

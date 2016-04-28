@@ -150,6 +150,7 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
         		points[i][0]=input_array[p.ypoints[i]*width+p.xpoints[i]];
         		points[i][1]=p.xpoints[i];
         		points[i][2]=p.ypoints[i]; 
+        		IJ.log("i,x,y: "+i+","+p.xpoints[i]+","+p.ypoints[i]);
         	}
         	
         	Manual_Tracker.vector_sort(points,  true);
