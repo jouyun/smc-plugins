@@ -28,6 +28,7 @@ import ij.gui.*;
 import java.awt.*;
 
 import ij.plugin.filter.*;
+import ij.plugin.frame.RoiManager;
 import ij.process.*;
 import ij.gui.*;
 import ij.util.Tools;
@@ -86,6 +87,7 @@ public class find_blobs_3D_quantify implements PlugIn {
 		dlg.addNumericField("Channel to segment on: ", 1, 0);
 		dlg.addNumericField("Filter ratio less than:", 1, 1);
 		dlg.addCheckbox("Apply filter? ", true);
+		dlg.addCheckbox("Make ROIs?" , true);
 		dlg.showDialog();
 		float threshold=(float) dlg.getNextNumber();
 		int minimum_size=(int)dlg.getNextNumber();
@@ -93,6 +95,7 @@ public class find_blobs_3D_quantify implements PlugIn {
 		int channel_to_segment=(int)dlg.getNextNumber();
 		float ratio=(float)dlg.getNextNumber();
 		boolean apply_filter=dlg.getNextBoolean();
+		boolean make_ROIs=dlg.getNextBoolean();
 		
 		float [] pix=new float[width*height*depth];
 		for (int i=0; i<depth; i++)
@@ -158,13 +161,31 @@ public class find_blobs_3D_quantify implements PlugIn {
 				the_table.addValue("Channel"+(i+1), averages[i]);
 			}
 			marked_blobs++;
+			float average_x=0, average_y=0, average_z=0;
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
 				int [] current_point=(int [])iF.next();
 				
 				byte [] new_pix=(byte []) new_img.getStack().getProcessor(current_point[2]+1).getPixels();
 				new_pix[current_point[0]+current_point[1]*width]=(byte)marked_blobs;
-			}			
+				
+				average_x+=current_point[0];
+				average_y+=current_point[1];
+				average_z+=current_point[2];
+			}	
+			
+			if (make_ROIs)
+			{
+				//Roi my_roi=new Roi(average_x/current_list.size(),average_y/current_list.size(),1,1);
+				PointRoi my_roi=new PointRoi(average_x/current_list.size(),average_y/current_list.size());
+				WindowManager.setTempCurrentImage(img);
+				img.setPosition(channel_to_segment, (int)Math.floor(average_z/current_list.size()), 1);
+				RoiManager manager=RoiManager.getInstance();
+				
+				if (manager==null) manager=new RoiManager();
+				
+				manager.addRoi(my_roi);
+			}
 		}
 		
 		/*byte [] byte_arr=Dilate3D.make_3D_byte(new_img, 0, 0);
