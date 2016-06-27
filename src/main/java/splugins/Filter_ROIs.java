@@ -2,6 +2,7 @@ package splugins;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.NewImage;
@@ -39,6 +40,10 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         //ImagePlus.addImageListener(this);
         counts=0;
         hit_list=new boolean[myimg.getNFrames()];
+        GenericDialog gd=new GenericDialog("Options");
+        gd.addCheckbox("Assume mostly good?", true);
+        gd.showDialog();
+        boolean mostly_good=gd.getNextBoolean();
         
         width=myimg.getWidth();
         height=myimg.getHeight();
@@ -48,7 +53,7 @@ public class Filter_ROIs implements KeyListener, PlugIn {
         
         RoiManager manager=RoiManager.getInstance();
         hit_list=new boolean[manager.getCount()];
-        for (int i=0; i<hit_list.length; i++) hit_list[i]=true;
+        for (int i=0; i<hit_list.length; i++) hit_list[i]=mostly_good;
 
 	}
 

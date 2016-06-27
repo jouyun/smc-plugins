@@ -15,10 +15,12 @@ public class Scale_Ramp_Zstack implements PlugIn {
 		GenericDialog gd=new GenericDialog("Config Ramp");
 		gd.addNumericField("Background:  ", 700, 1);
 		gd.addNumericField("Final slice's intensity :  ", 0.1, 2);
+		gd.addCheckbox("Exponential?", false);
 		gd.showDialog();
 		
 		double background=gd.getNextNumber();
 		double last_slice=gd.getNextNumber();
+		boolean expo=gd.getNextBoolean();
 		double increment=(1-last_slice)/(slices-1);
 		for (int f=0; f<frames; f++)
 		{
@@ -29,7 +31,15 @@ public class Scale_Ramp_Zstack implements PlugIn {
 					float [] frame=(float []) img.getStack().getProcessor(1+c+s*channels+f*channels*slices).getPixels();
 					for (int i=0; i<frame.length; i++)
 					{
-						frame[i]=(float) (((frame[i]-background)/(1-s*increment))+background);
+						
+						if (expo)
+						{
+							frame[i]=(float) ((frame[i]-background)/(Math.exp(-s/1.44/(last_slice)))+background);
+						}
+						else
+						{
+							frame[i]=(float) (((frame[i]-background)/(1-s*increment))+background);
+						}
 					}
 				}
 			}

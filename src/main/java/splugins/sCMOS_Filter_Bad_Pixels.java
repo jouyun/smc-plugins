@@ -114,74 +114,156 @@ public class sCMOS_Filter_Bad_Pixels implements PlugIn {
 		
 		byte[] byte_pix=(byte []) target_img.getProcessor().getPixels();
 		
-		for (int s=0; s<slices; s++)
+		switch (img.getType()) 
 		{
-			float [] pix=(float []) img.getStack().getProcessor(s+1).getPixels();
-			IJ.log("Slice:  "+(s+1));
-			for (int i=0; i<width; i++)
+			case ImagePlus.GRAY16: 
 			{
-				for (int j=0; j<height; j++)
+				for (int s=0; s<slices; s++)
 				{
-					if (byte_pix[i+j*width]==0) continue;
-					float tmp=0;
-					float num_pix=0;
-					List <Float> stk=new ArrayList<Float>();
-					if (i>0) 
+					short [] pix=(short []) img.getStack().getProcessor(s+1).getPixels();
+					IJ.log("Slice:  "+(s+1));
+					for (int i=0; i<width; i++)
 					{
-						if (byte_pix[i-1+j*width]==0)
+						for (int j=0; j<height; j++)
 						{
-							tmp+=pix[i-1+j*width];
-							stk.add(pix[i-1+j*width]);
-							num_pix++;
-						}						
-					}
-					if (i<width-1) 
-					{
-						if (byte_pix[i+1+j*width]==0)
-						{
-							tmp+=pix[i+1+j*width];
-							stk.add(pix[i+1+j*width]);
-							num_pix++;
-						}
-					}
-					if (j>0) 
-					{
-						if (byte_pix[i+(j-1)*width]==0)
-						{
-							tmp+=pix[i+(j-1)*width];
-							stk.add(pix[i+(j-1)*width]);
-							num_pix++;
-						}
-					}
-					if (j<height-1) 
-					{
-						if (byte_pix[i+(j+1)*width]==0)
-						{
-							tmp+=pix[i+(j+1)*width];
-							stk.add(pix[i+(j+1)*width]);
-							num_pix++;
-						}
-					}
-					if (choice_index==0)
-					{
-						if (num_pix>0) pix[i+j*width]=stk.get((int)num_pix/2);
-					}
-					else
-					{
-						if (choice_index==1)
-						{
-							Collections.sort(stk);
-							if (num_pix>0) pix[i+j*width]=stk.get((int)num_pix/2);
-						}
-						else
-						{
-							if (num_pix>0) pix[i+j*width]=tmp/num_pix;
+							if (byte_pix[i+j*width]==0) continue;
+							short tmp=0;
+							short num_pix=0;
+							List <Short> stk=new ArrayList<Short>();
+							if (i>0) 
+							{
+								if (byte_pix[i-1+j*width]==0)
+								{
+									tmp+=pix[i-1+j*width];
+									stk.add(pix[i-1+j*width]);
+									num_pix++;
+								}						
+							}
+							if (i<width-1) 
+							{
+								if (byte_pix[i+1+j*width]==0)
+								{
+									tmp+=pix[i+1+j*width];
+									stk.add(pix[i+1+j*width]);
+									num_pix++;
+								}
+							}
+							if (j>0) 
+							{
+								if (byte_pix[i+(j-1)*width]==0)
+								{
+									tmp+=pix[i+(j-1)*width];
+									stk.add(pix[i+(j-1)*width]);
+									num_pix++;
+								}
+							}
+							if (j<height-1) 
+							{
+								if (byte_pix[i+(j+1)*width]==0)
+								{
+									tmp+=pix[i+(j+1)*width];
+									stk.add(pix[i+(j+1)*width]);
+									num_pix++;
+								}
+							}
+							if (choice_index==0)
+							{
+								if (num_pix>0) pix[i+j*width]=stk.get((int)num_pix/2);
+							}
+							else
+							{
+								if (choice_index==1)
+								{
+									Collections.sort(stk);
+									if (num_pix>0) pix[i+j*width]=stk.get((int)num_pix/2);
+								}
+								else
+								{
+									if (num_pix>0) pix[i+j*width]=(short) (tmp/num_pix);
+								}
+							}
 						}
 					}
 				}
+				break;
+			}
+			case ImagePlus.GRAY32: 
+			{
+				for (int s=0; s<slices; s++)
+				{
+					float [] pix=(float []) img.getStack().getProcessor(s+1).getPixels();
+					IJ.log("Slice:  "+(s+1));
+					for (int i=0; i<width; i++)
+					{
+						for (int j=0; j<height; j++)
+						{
+							if (byte_pix[i+j*width]==0) continue;
+							float tmp=0;
+							float num_pix=0;
+							List <Float> stk=new ArrayList<Float>();
+							if (i>0) 
+							{
+								if (byte_pix[i-1+j*width]==0)
+								{
+									tmp+=pix[i-1+j*width];
+									stk.add(pix[i-1+j*width]);
+									num_pix++;
+								}						
+							}
+							if (i<width-1) 
+							{
+								if (byte_pix[i+1+j*width]==0)
+								{
+									tmp+=pix[i+1+j*width];
+									stk.add(pix[i+1+j*width]);
+									num_pix++;
+								}
+							}
+							if (j>0) 
+							{
+								if (byte_pix[i+(j-1)*width]==0)
+								{
+									tmp+=pix[i+(j-1)*width];
+									stk.add(pix[i+(j-1)*width]);
+									num_pix++;
+								}
+							}
+							if (j<height-1) 
+							{
+								if (byte_pix[i+(j+1)*width]==0)
+								{
+									tmp+=pix[i+(j+1)*width];
+									stk.add(pix[i+(j+1)*width]);
+									num_pix++;
+								}
+							}
+							if (choice_index==0)
+							{
+								if (num_pix>0) pix[i+j*width]=stk.get((int)num_pix/2);
+							}
+							else
+							{
+								if (choice_index==1)
+								{
+									Collections.sort(stk);
+									if (num_pix>0) pix[i+j*width]=stk.get((int)num_pix/2);
+								}
+								else
+								{
+									if (num_pix>0) pix[i+j*width]=tmp/num_pix;
+								}
+							}
+						}
+					}
+				}
+				break;
+			}
+			default: 
+			{
+				IJ.error("Unexpected image type");
+				return;
 			}
 		}
-
 	}
 
 	private ImagePlus[] createAdmissibleImageList () 
