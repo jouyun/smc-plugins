@@ -13,7 +13,7 @@ import ij.measure.*;
 
 import java.awt.Rectangle;
 
-import jguis.PlotWindow4;
+//import jguis.PlotWindow4;
 
 public class Multi_Spectral_Profiler implements PlugInFilter, MouseListener, MouseMotionListener, Measurements, KeyListener {
     ImagePlus img;
@@ -145,8 +145,8 @@ public class Multi_Spectral_Profiler implements PlugInFilter, MouseListener, Mou
 				my_y_list[i][j]=(float) y_list[i][j];
 			}
 		}
-    	PlotWindow4 myjaywindow=new PlotWindow4("Profile","Channel","Intensity",my_x_list,my_y_list,null);
-    	myjaywindow.draw();
+    	//PlotWindow4 myjaywindow=new PlotWindow4("Profile","Channel","Intensity",my_x_list,my_y_list,null);
+    	//myjaywindow.draw();
     }
 	public void keyPressed(KeyEvent e) {
 		char rtn;
