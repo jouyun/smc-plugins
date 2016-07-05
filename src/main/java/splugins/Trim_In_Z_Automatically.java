@@ -3,6 +3,7 @@ package splugins;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.gui.NewImage;
 import ij.gui.Plot;
 import ij.plugin.PlugIn;
@@ -17,13 +18,17 @@ public class Trim_In_Z_Automatically implements PlugIn {
 		int height=img.getHeight();
 		float [] data=new float[slices];
 
+		GenericDialog gd=new GenericDialog("Filter");
+		gd.addNumericField("Fraction from peak", .05, 2);
+		gd.showDialog();
+		double filter=gd.getNextNumber();
+		
 		//Get the z profile array
 		for (int z=0; z<slices; z++)
 		{
 			float [] pix=(float [])(img.getStack().getProcessor(channel+z*channels+frame*channels*slices+1).convertToFloat().getPixels());
 			data[z]=(float) (Profile_Z_Information.calculate_auto_corr(pix, pix, width, height, 1)-Profile_Z_Information.calculate_auto_corr(pix, pix, width, height, 2));
 		}
-		
 		//Find the max autocorr and min autocorr
 		double max=0, min=1E10;
 		int max_idx=-1, min_idx=-1;
@@ -45,7 +50,7 @@ public class Trim_In_Z_Automatically implements PlugIn {
 		int start_slice=0;
 		for (int z=0; z<slices; z++)
 		{
-			if (data[z]>(max-min)*0.05+min)
+			if (data[z]>(max-min)*filter+min)
 			{
 				start_slice=z;
 				break;
@@ -56,7 +61,7 @@ public class Trim_In_Z_Automatically implements PlugIn {
 		int last_slice=slices-1;
 		for (int z=slices-1; z>0; z--)
 		{
-			if (data[z]>(max-min)*0.05+min)
+			if (data[z]>(max-min)*filter+min)
 			{
 				last_slice=z;
 				break;
