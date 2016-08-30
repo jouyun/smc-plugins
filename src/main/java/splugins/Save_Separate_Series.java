@@ -148,7 +148,7 @@ public class Save_Separate_Series implements PlugIn, KeyListener {
         		if (labels[i]==0) continue;
         		String folder=directory+File.separator+class_list.get(labels[i]-1)+File.separator;
         		ImagePlus tmp=new ImagePlus("Title", (ImageProcessor)(imp.getStack().getProcessor(i+1).clone()));
-        		IJ.saveAs(tmp, "Jpeg", folder+(i+1)+".jpg");
+        		IJ.saveAs(tmp, "Jpeg", folder+IJ.pad(i+1, 6)+".jpg");
         	}
         	cleanup();
         }
