@@ -18,12 +18,51 @@ import ij.plugin.PlugIn;
 public class Stitch_PE_Data implements PlugIn {
 
 	static Double number_worms;
+	
 	class worm_wrapper
 	{
 		String name;
 		ArrayList <Double> x_loc;
 		ArrayList <Double> y_loc;
 	};
+	class blocks_wrapper
+	{
+		ArrayList<block> myblocks;
+		blocks_wrapper()
+		{
+			myblocks=new ArrayList<block>();
+		}
+		block find_block(int idx)
+		{
+			for (ListIterator<block> myBlock=myblocks.listIterator(); myBlock.hasNext();)
+			{
+				block cur=myBlock.next();
+				if (cur.block_id==idx) return cur;
+			}
+			return null;
+		}
+	};
+	class position
+	{
+		int frame;
+		double x_loc;
+		double y_loc;
+		position(int a, double b, double c)
+		{
+			frame=a;
+			x_loc=b;
+			y_loc=c;
+		}
+	}
+	class block
+	{
+		int block_id;
+		ArrayList <position> dat;
+		block()
+		{
+			dat=new ArrayList<position> ();
+		}
+	}
 	@Override
 	public void run(String arg0) {
 		
@@ -44,12 +83,63 @@ public class Stitch_PE_Data implements PlugIn {
 		
 		String imgInfo=img.getInfoProperty();
 		
-		ArrayList <worm_wrapper> worm_list=find_location_entries(imgInfo);
+		//ArrayList <worm_wrapper> worm_list=find_location_entries(imgInfo);
+		
+		blocks_wrapper block_list=find_location_entries_new(imgInfo);
 		
 		IJ.runMacroFile("SaveMultipageImageSequence.ijm", save_tmp_directory);
 		
-		
 		int width=img.getWidth(); 
+		int height=img.getHeight();
+		int cumulative_index=0;
+		for (int j=0; j<block_list.myblocks.size(); j++)
+		{
+			try {
+				FileOutputStream fos=new FileOutputStream(save_tmp_directory+"out"+(j+1)+".txt");
+				IJ.log(save_tmp_directory+"out"+(j+1)+".txt");
+				Writer w= new BufferedWriter(new OutputStreamWriter(fos));
+				w.write("# Define the number of dimensions we are working on\n");
+				if (img.getNSlices()>1)
+				{
+					w.write("dim = 3\n\n# Define the image coordinates\n");
+				}
+				else
+				{
+					w.write("dim = 2\n\n# Define the image coordinates\n");
+				}
+				
+				block my_block=block_list.myblocks.get(j);
+				double x_base=my_block.dat.get(0).x_loc;
+				double y_base=my_block.dat.get(0).y_loc;
+				
+				for (int i=0; i<my_block.dat.size(); i++)
+				{
+					int cur_frame=my_block.dat.get(i).frame;
+					double cur_x=my_block.dat.get(i).x_loc;
+					double cur_y=my_block.dat.get(i).y_loc;
+					IJ.log("Tiffs"+String.format("%04d", cur_frame-1)+".tif; ; ("+(cur_x-x_base)/my_cal.pixelWidth+", "+(cur_y-y_base)/my_cal.pixelWidth+")\n");
+					if (img.getNSlices()>1)
+					{
+						w.write("Tiffs"+String.format("%04d", cur_frame-1)+".tif; ; ("+(cur_x-x_base)/my_cal.pixelWidth+", "+(cur_y-y_base)/my_cal.pixelWidth+",0.0)\n");
+					}
+					else
+					{
+						w.write("Tiffs"+String.format("%04d", cur_frame-1)+".tif; ; ("+(cur_x-x_base)/my_cal.pixelWidth+", "+(cur_y-y_base)/my_cal.pixelWidth+")\n");
+					}
+					
+					cumulative_index++;
+				}
+				w.flush();
+				w.close();
+			}
+			catch (Exception e) {}
+			IJ.log("About to start processing this directory: "+save_tmp_directory+" and this file: out"+(j+1)+".txt");
+			IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_tmp_directory+"] layout_file=out"+(j+1)+".txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+			WindowManager.getCurrentImage().setTitle("Worm"+(j+1));
+		}
+		number_worms=(double) block_list.myblocks.size();
+		
+		/*int width=img.getWidth(); 
 		int height=img.getHeight();
 		int cumulative_index=0;
 		for (int j=0; j<worm_list.size(); j++)
@@ -94,7 +184,7 @@ public class Stitch_PE_Data implements PlugIn {
 			IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_tmp_directory+"] layout_file=out"+(j+1)+".txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
 			WindowManager.getCurrentImage().setTitle("Worm"+(j+1));
 		}
-		number_worms=(double) worm_list.size();
+		number_worms=(double) worm_list.size();*/
 
 	}
 	
@@ -230,6 +320,70 @@ public class Stitch_PE_Data implements PlugIn {
 		}
 		
 		return rtn;
+	}
+	int get_series(String val)
+	{
+		int fidx=7;
+		int eidx=val.indexOf("Name")-2;
+		return Integer.parseInt(val.substring(fidx, eidx));
+		
+	}
+	int get_point(String val)
+	{
+		int fidx=val.indexOf("point")+6;
+		int eidx=val.indexOf("(")-2;
+		return Integer.parseInt(val.substring(fidx, eidx));
+		
+	}
+	int get_tile(String val)
+	{
+		int fidx=val.indexOf("tile")+5;
+		int eidx=val.indexOf(")")-1;
+		return Integer.parseInt(val.substring(fidx, eidx));
+		
+	}
+	public blocks_wrapper find_location_entries_new(String info)
+	{
+		int idx=0;
+		ArrayList<worm_wrapper> rtn=new ArrayList<worm_wrapper>();
+		
+		String lines[]=info.split("\\r?\\n");
+		
+		// Series 12 Name = XY point 2 (raw tile 4)
+		//		 Series 13 Name = XY point 2 (raw tile 5)
+		//XY point 2 (raw tile 5) X Location = 52906.23828125
+		blocks_wrapper block_list=new blocks_wrapper();
+		for (int i=0; i<lines.length; i++)
+		{
+			if (lines[i].contains("Series"))
+			{
+				int slice_index=i;
+				int series_number=get_series(lines[i]);
+				int XY_point=get_point(lines[i]);
+				int tile=get_tile(lines[i]);
+				String search_loc="XY point "+XY_point+" (raw tile "+tile+") X Location = ";
+				double x_pos=Double.parseDouble(lines[i].substring(lines[i].indexOf(search_loc)+search_loc.length(), lines[i].length()));
+				search_loc="XY point "+XY_point+" (raw tile "+tile+") Y Location = ";
+				double y_pos=Double.parseDouble(lines[i].substring(lines[i].indexOf(search_loc)+search_loc.length(), lines[i].length()));	
+				block cur=block_list.find_block(XY_point);
+				if (cur==null)
+				{
+					block tmp=new block();
+					position my_pos=new position(slice_index, x_pos, y_pos);
+					tmp.dat.add(my_pos);
+					block_list.myblocks.add(tmp);
+				}
+				else
+				{
+					position my_pos=new position(slice_index, x_pos, y_pos);
+					cur.dat.add(my_pos);
+				}
+			}
+		}
+		
+
+		
+		return block_list;
 	}
 	
 }
