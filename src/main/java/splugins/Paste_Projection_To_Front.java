@@ -13,16 +13,23 @@ public class Paste_Projection_To_Front implements PlugIn {
 	public void run(String arg0) {
 		// TODO Auto-generated method stub
 		ImagePlus img=WindowManager.getCurrentImage();
-		int width=img.getWidth(), height=img.getHeight(), channels=img.getNChannels(), slices=img.getNSlices(), frames=img.getNFrames();
 		
-		ImagePlus new_img=NewImage.createShortImage("Projection", width, height, (channels*slices+1)*frames, NewImage.FILL_BLACK);
+		
+		
 		
 		GenericDialog gd=new GenericDialog("Which channel's z projection do you want pasted to front?");
 		gd.addNumericField("Channel to paste?", 1, 0);
 		gd.showDialog();
 		int z_channel=(int) (gd.getNextNumber()-1);
-
 		
+		ImagePlus new_img=paste_project(img, z_channel);
+		new_img.show();
+		new_img.updateAndDraw();
+	}
+	static public ImagePlus paste_project(ImagePlus img, int z_channel)
+	{
+		int width=img.getWidth(), height=img.getHeight(), channels=img.getNChannels(), slices=img.getNSlices(), frames=img.getNFrames();
+		ImagePlus new_img=NewImage.createShortImage("Projection", width, height, (channels*slices+1)*frames, NewImage.FILL_BLACK);
 		for (int f=0; f<frames; f++)
 		{
 			short [] tmp_max=new short[width*height];
@@ -54,8 +61,9 @@ public class Paste_Projection_To_Front implements PlugIn {
 
 		new_img.setOpenAsHyperStack(true);
 		new_img.setDimensions((channels*slices+1), 1, frames);
-		new_img.show();
-		new_img.updateAndDraw();
+		new_img.setProperty("Info", img.getInfoProperty());
+		new_img.setCalibration(img.getCalibration());
+		return new_img;
 	}
 
 }

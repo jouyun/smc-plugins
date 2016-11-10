@@ -18,6 +18,7 @@ import ij.plugin.PlugIn;
 public class Stitch_PE_Data implements PlugIn {
 
 	static Double number_worms;
+	String [] slice_labels;
 	
 	class worm_wrapper
 	{
@@ -37,11 +38,21 @@ public class Stitch_PE_Data implements PlugIn {
 			for (ListIterator<block> myBlock=myblocks.listIterator(); myBlock.hasNext();)
 			{
 				block cur=myBlock.next();
+				IJ.log("Existing:  "+cur.block_id+ ","+idx);
 				if (cur.block_id==idx) return cur;
 			}
 			return null;
 		}
 	};
+	class block
+	{
+		int block_id;
+		ArrayList <position> dat;
+		block()
+		{
+			dat=new ArrayList<position> ();
+		}
+	}
 	class position
 	{
 		int frame;
@@ -54,15 +65,6 @@ public class Stitch_PE_Data implements PlugIn {
 			y_loc=c;
 		}
 	}
-	class block
-	{
-		int block_id;
-		ArrayList <position> dat;
-		block()
-		{
-			dat=new ArrayList<position> ();
-		}
-	}
 	@Override
 	public void run(String arg0) {
 		
@@ -70,7 +72,7 @@ public class Stitch_PE_Data implements PlugIn {
 		number_worms=(double) 0;
 		
 		GenericDialog gd = new GenericDialog("Merge Tiled Objects");
-		gd.addStringField("Path to save to:  ", "/home/smc/Data/SMC/SimpleStitchTest/A2/");
+		gd.addStringField("Path to save to:  ", "C:\\Users\\smc\\Desktop\\tmp\\");
 		gd.showDialog();
 		
 		Calibration my_cal=img.getCalibration();
@@ -81,12 +83,20 @@ public class Stitch_PE_Data implements PlugIn {
 		File my_dir=new File(save_tmp_directory);
 		my_dir.mkdir();
 		
-		String imgInfo=img.getInfoProperty();
+		slice_labels=new String[img.getNFrames()];
+		for (int i=0; i<img.getNFrames(); i++)
+		{
+			slice_labels[i]=img.getStack().getSliceLabel(1+i*img.getNSlices()*img.getNChannels());
+			IJ.log(slice_labels[i]);
+		}
 		
-		//ArrayList <worm_wrapper> worm_list=find_location_entries(imgInfo);
+		
+		String imgInfo=img.getInfoProperty();
 		
 		blocks_wrapper block_list=find_location_entries_new(imgInfo);
 		
+		
+		//replace this
 		IJ.runMacroFile("SaveMultipageImageSequence.ijm", save_tmp_directory);
 		
 		int width=img.getWidth(); 
@@ -139,53 +149,6 @@ public class Stitch_PE_Data implements PlugIn {
 		}
 		number_worms=(double) block_list.myblocks.size();
 		
-		/*int width=img.getWidth(); 
-		int height=img.getHeight();
-		int cumulative_index=0;
-		for (int j=0; j<worm_list.size(); j++)
-		{
-			try {
-				FileOutputStream fos=new FileOutputStream(save_tmp_directory+"out"+(j+1)+".txt");
-				IJ.log(save_tmp_directory+"out"+(j+1)+".txt");
-				Writer w= new BufferedWriter(new OutputStreamWriter(fos));
-				w.write("# Define the number of dimensions we are working on\n");
-				if (img.getNSlices()>1)
-				{
-					w.write("dim = 3\n\n# Define the image coordinates\n");
-				}
-				else
-				{
-					w.write("dim = 2\n\n# Define the image coordinates\n");
-				}
-				
-				worm_wrapper my_worm=worm_list.get(j);
-				double x_base=my_worm.x_loc.get(0);
-				double y_base=my_worm.y_loc.get(0);
-				
-				for (int i=0; i<my_worm.x_loc.size(); i++)
-				{
-					IJ.log("Tiffs"+String.format("%04d", cumulative_index)+".tif; ; ("+(my_worm.x_loc.get(i)-x_base)/my_cal.pixelWidth+", "+(my_worm.y_loc.get(i)-y_base)/my_cal.pixelWidth+")\n");
-					if (img.getNSlices()>1)
-					{
-						w.write("Tiffs"+String.format("%04d", cumulative_index)+".tif; ; ("+(my_worm.x_loc.get(i)-x_base)/my_cal.pixelWidth+", "+(my_worm.y_loc.get(i)-y_base)/my_cal.pixelWidth+", 0.0)\n");
-					}
-					else
-					{
-						w.write("Tiffs"+String.format("%04d", cumulative_index)+".tif; ; ("+(my_worm.x_loc.get(i)-x_base)/my_cal.pixelWidth+", "+(my_worm.y_loc.get(i)-y_base)/my_cal.pixelWidth+")\n");
-					}
-					
-					cumulative_index++;
-				}
-				w.flush();
-				w.close();
-			}
-			catch (Exception e) {}
-			IJ.log("About to start processing this directory: "+save_tmp_directory+" and this file: out"+(j+1)+".txt");
-			IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_tmp_directory+"] layout_file=out"+(j+1)+".txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
-			WindowManager.getCurrentImage().setTitle("Worm"+(j+1));
-		}
-		number_worms=(double) worm_list.size();*/
-
 	}
 	
 	public static String getResult()
@@ -323,29 +286,40 @@ public class Stitch_PE_Data implements PlugIn {
 	}
 	int get_series(String val)
 	{
-		int fidx=7;
-		int eidx=val.indexOf("Name")-2;
+		IJ.log(val);
+		int fidx=8;
+		int eidx=val.indexOf("Name")-1;
+		IJ.log(val.substring(fidx,eidx));
 		return Integer.parseInt(val.substring(fidx, eidx));
 		
 	}
 	int get_point(String val)
 	{
 		int fidx=val.indexOf("point")+6;
-		int eidx=val.indexOf("(")-2;
+		int eidx=val.indexOf("(")-1;
+		IJ.log(val.substring(fidx,eidx));
 		return Integer.parseInt(val.substring(fidx, eidx));
 		
 	}
 	int get_tile(String val)
 	{
 		int fidx=val.indexOf("tile")+5;
-		int eidx=val.indexOf(")")-1;
+		int eidx=val.indexOf(")")-0;
+		IJ.log(val.substring(fidx,eidx));
 		return Integer.parseInt(val.substring(fidx, eidx));
-		
 	}
+	double get_position(String info, String search_string)
+	{
+		int fidx=info.indexOf(search_string)+search_string.length();
+		int eidx=info.indexOf("X",fidx);
+		IJ.log(info.substring(fidx,eidx));
+		return Double.parseDouble(info.substring(fidx, eidx-1));
+	}
+	
+	
 	public blocks_wrapper find_location_entries_new(String info)
 	{
-		int idx=0;
-		ArrayList<worm_wrapper> rtn=new ArrayList<worm_wrapper>();
+		
 		
 		String lines[]=info.split("\\r?\\n");
 		
@@ -362,13 +336,14 @@ public class Stitch_PE_Data implements PlugIn {
 				int XY_point=get_point(lines[i]);
 				int tile=get_tile(lines[i]);
 				String search_loc="XY point "+XY_point+" (raw tile "+tile+") X Location = ";
-				double x_pos=Double.parseDouble(lines[i].substring(lines[i].indexOf(search_loc)+search_loc.length(), lines[i].length()));
+				double x_pos=get_position(info, search_loc);
 				search_loc="XY point "+XY_point+" (raw tile "+tile+") Y Location = ";
-				double y_pos=Double.parseDouble(lines[i].substring(lines[i].indexOf(search_loc)+search_loc.length(), lines[i].length()));	
+				double y_pos=get_position(info, search_loc);
 				block cur=block_list.find_block(XY_point);
 				if (cur==null)
 				{
 					block tmp=new block();
+					tmp.block_id=XY_point;
 					position my_pos=new position(slice_index, x_pos, y_pos);
 					tmp.dat.add(my_pos);
 					block_list.myblocks.add(tmp);

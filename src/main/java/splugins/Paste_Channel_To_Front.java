@@ -44,6 +44,9 @@ public class Paste_Channel_To_Front implements PlugIn {
 		}
 		new_img.setOpenAsHyperStack(true);
 		new_img.setDimensions(channels+1, 1, frames);
+		new_img.setProperty("Info", img.getInfoProperty());
+		new_img.setCalibration(img.getCalibration());
+		
 		new_img.show();
 		new_img.updateAndDraw();
 	}

@@ -130,6 +130,9 @@ public class Correct_Flatness implements PlugIn {
 				}
 			}
 		}
+		new_img.setProperty("Info", img.getInfoProperty());
+		new_img.setCalibration(img.getCalibration());
+		
 		return new_img;
 	}
 	/*******************************************************************************************
@@ -216,6 +219,8 @@ public class Correct_Flatness implements PlugIn {
 				}
 			}
 		}
+		new_img.setProperty("Info", img.getInfoProperty());
+		new_img.setCalibration(img.getCalibration());
 		
 		return new_img;
 	}
