@@ -31,7 +31,7 @@ public class Create_Tensorflow_Stacks implements PlugIn {
 	int cur_channel;
 	ImagePlus source_img, new_imp;
 	int sub_sample=1000;
-	static final int window_size=32;
+	int window_size;
 	static final int z_window_size=2;
 	
 	class MyPoint {
@@ -71,6 +71,7 @@ public class Create_Tensorflow_Stacks implements PlugIn {
 		GenericDialog gd = new GenericDialog("Choose point masked image");
 		gd.addChoice("Source image:", sourceNames, admissibleImageList[0].getTitle());
 		gd.addNumericField("Sub-sample rate", 1000, 0);
+		gd.addNumericField("Window size: ", 32, 0);
 		gd.showDialog();
 		
 		if (gd.wasCanceled()) 
@@ -81,6 +82,7 @@ public class Create_Tensorflow_Stacks implements PlugIn {
 		int sourceIndex=gd.getNextChoiceIndex();		
 		source_img=admissibleImageList[sourceIndex];
 		sub_sample=(int)gd.getNextNumber();
+		window_size=(int)gd.getNextNumber();
 		
 		ArrayList <MyPoint> point_list=get_point_list(source_img);
 		IJ.log("Number of points:  "+point_list.size());
