@@ -97,6 +97,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		high_label=gd.getNextBoolean();
 		int overview_series=4;
 		if (high_label) overview_series=9;
+		boolean is_composite=false;
 		
 		//Populate organizational database
 		get_frame_list(base_directory);
@@ -114,6 +115,8 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 			//String base_file=base_directory+File.separator+prelude+IJ.pad(cur_frame.tray, 2)+"_"+IJ.pad(cur_frame.slide, 2)+"_"+IJ.pad(1, 2)+File.separator+"Image_Overview.vsi";
 			IJ.run("Bio-Formats Importer", "open="+base_file+" color_mode=Default view=Hyperstack stack_order=XYCZT series_"+overview_series);
 			WindowManager.getCurrentImage().setTitle("img"+(tmp_ctr));
+			ImagePlus tmp=WindowManager.getCurrentImage();
+			if (tmp.getDisplayMode()==IJ.COMPOSITE)is_composite=true;
 			concat_list=concat_list+"image"+tmp_ctr+"="+WindowManager.getCurrentImage().getTitle()+" ";
 			tmp_ctr++;
 		}
@@ -130,17 +133,39 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		}
 		IJ.run("16-bit");
 		img=WindowManager.getCurrentImage();
+		if (is_composite==true) 
+		{
+			IJ.log("Turn it back to composite");
+			IJ.run("Stack to Hyperstack...", "order=xyczt(default) channels=3 slices="+(img.getNSlices()/3)+" frames=1 display=Composite");
+		}
+		img=WindowManager.getCurrentImage();
 		
 		/************Draw rois on appropriate slice***************/
 		for (int f=0; f<frame_list.size(); f++)
 		{
 			My_Frame cur_frame=frame_list.get(f);
-			short [] pix=(short []) img.getStack().getProcessor((f)*img.getNChannels()+1).getPixels(); 
-			for (ListIterator <My_ROI> fF=cur_frame.loc_list.listIterator(); fF.hasNext();)
+			if (is_composite)
 			{
-				My_ROI cur_ROI=fF.next();
-				paint_box(pix, cur_ROI.x_origin, cur_ROI.y_origin, cur_ROI.width_in_overview, cur_ROI.height_in_overview, img.getWidth(), img.getHeight());
+				for (int c=0; c<3; c++)
+				{
+					short [] pix=(short []) img.getStack().getProcessor((f)*img.getNChannels()+1+c).getPixels(); 
+					for (ListIterator <My_ROI> fF=cur_frame.loc_list.listIterator(); fF.hasNext();)
+					{
+						My_ROI cur_ROI=fF.next();
+						paint_box(pix, cur_ROI.x_origin, cur_ROI.y_origin, cur_ROI.width_in_overview, cur_ROI.height_in_overview, img.getWidth(), img.getHeight());
+					}
+				}
 			}
+			else
+			{
+				short [] pix=(short []) img.getStack().getProcessor((f)*img.getNChannels()+1).getPixels(); 
+				for (ListIterator <My_ROI> fF=cur_frame.loc_list.listIterator(); fF.hasNext();)
+				{
+					My_ROI cur_ROI=fF.next();
+					paint_box(pix, cur_ROI.x_origin, cur_ROI.y_origin, cur_ROI.width_in_overview, cur_ROI.height_in_overview, img.getWidth(), img.getHeight());
+				}
+			}
+			
 		}
 
 		img.updateAndDraw();
