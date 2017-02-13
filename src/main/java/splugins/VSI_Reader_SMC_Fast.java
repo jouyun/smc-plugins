@@ -485,6 +485,16 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void addOneToAll(ImagePlus imp)
+	{
+		int w=imp.getWidth(), h=imp.getHeight(), s=imp.getStackSize();
+		for (int i=0; i<s; i++)
+		{
+			byte [] cur=(byte [])imp.getStack().getPixels(i+1);
+			for (int p=0; p<w*h; p++) if (cur[p]==0) cur[p]+=1;
+		}
+	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -520,6 +530,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 					IJ.run("Bio-Formats Importer", "open="+r.fname+" color_mode=Default view=Hyperstack stack_order=XYCZT series_"+dezoom_scale);
 					if (create_stack)
 					{
+						addOneToAll(WindowManager.getCurrentImage());
 						IJ.run("Canvas Size...", "width="+max_width+" height="+max_height+" position=Center");
 						WindowManager.getCurrentImage().setTitle("img"+(i+1));
 						//concat_list=concat_list+"image"+(i+1)+"="+WindowManager.getCurrentImage().getTitle()+" ";
