@@ -33,7 +33,8 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		gd.addNumericField("Well", 0, 0);
 		gd.addNumericField("Object", 0, 0);
 		gd.addNumericField("Channel to use for stitch?", 1, 0);
-		gd.addCheckbox("Bad pixels?", false);
+		gd.addCheckbox("Override scaling?", false);
+		gd.addNumericField("Pixel Size", 0.780, 3);
 		gd.showDialog();
 		
 		String base_dir=gd.getNextString()+File.separator;
@@ -41,7 +42,8 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		int well=(int)gd.getNextNumber();
 		int object=(int)gd.getNextNumber();
 		int stitch_channel=(int)gd.getNextNumber();
-		boolean bad_pixels=gd.getNextBoolean();
+		boolean override_scaling=gd.getNextBoolean();
+		double pixel_scaling=gd.getNextNumber();
 		String base_image_name="Plate"+IJ.pad(plate, 3)+"_Well"+well+"_Count"+IJ.pad(object,5)+"_Point";
 		
 		
@@ -102,20 +104,17 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		img=WindowManager.getCurrentImage();
 		IJ.run("Flip Vertically", "stack");
 		IJ.run("Flip Horizontally", "stack");
-		if (bad_pixels) 
-		{
-			IJ.open("/n/projects/smc/public/FGM/sCMOS_BadPixels.tif");
-			WindowManager.setCurrentWindow(img.getWindow());
-
-			IJ.run("sCMOS Filter Bad Pixels", "target=sCMOS_BadPixels.tif how=[Random neighbor]");
-		}
 		
-		float pix_size=(float)img.getCalibration().pixelWidth;
+		
+		float pix_size=(float) ((float)img.getCalibration().pixelWidth*1.2);
+		if (override_scaling) 
+		{
+			pix_size=(float)pixel_scaling;
+		}
 		for (int j=0; j<xy_pts[0].length; j++)
 		{
-			//REMOVE THIS 1.2 OR YOU WILL BE VERY SORRY
-			xy_pts[0][j]=(float) (xy_pts[0][j]/pix_size/1.2);
-			xy_pts[1][j]=(float) (xy_pts[1][j]/pix_size/1.2);
+			xy_pts[0][j]=(float) (xy_pts[0][j]/pix_size);
+			xy_pts[1][j]=(float) (xy_pts[1][j]/pix_size);
 		}
 		
 		stitch_generic.stitch_img(WindowManager.getCurrentImage(), xy_pts[0], xy_pts[1], base_dir, stitch_channel-1);

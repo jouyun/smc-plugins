@@ -38,6 +38,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
 	float [] peak_intensities;
 	float [] points_added;
 	ImagePlus mask_img;
+	ImagePlus img;
 	
 	class MyIntPoint
 	{
@@ -72,12 +73,12 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
 	@Override
 	public void run(String arg0) {
 		
-		ImagePlus imp=WindowManager.getCurrentImage();
-		width=imp.getWidth(); 
-		height=imp.getHeight();
-		slices=imp.getNSlices();
-		frames=imp.getNFrames();
-		channels=imp.getNChannels();
+		img=WindowManager.getCurrentImage();
+		width=img.getWidth(); 
+		height=img.getHeight();
+		slices=img.getNSlices();
+		frames=img.getNFrames();
+		channels=img.getNChannels();
 	    
         //Do the dialog box
         if (GetDialogParameters()==false) return;
@@ -92,7 +93,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
         	raw_data[c]=new float[slices][];
         	for (int z=0; z<slices; z++)
         	{
-        		raw_data[c][z]=(float [])imp.getStack().getPixels(1+c+z*channels);
+        		raw_data[c][z]=(float [])img.getStack().getPixels(1+c+z*channels);
         	}
         }
         
@@ -137,7 +138,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
         
 		ResultsTable rslt;
 		rslt=ResultsTable.getResultsTable();
-		rslt.incrementCounter();
+		//rslt.incrementCounter();
         rslt.show("Results");
         
         //Displays results (mostly for debugging)
@@ -174,6 +175,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
 		rslt.addValue("X", list.get(0).x);
 		rslt.addValue("Y", list.get(0).y);
 		rslt.addValue("Z", list.get(0).z);
+		rslt.addValue("Image", img.getTitle());
 		for (int c=0; c<cs; c++)
 		{
 			rslt.addValue("C"+(c+1), totals[c]/num_points);

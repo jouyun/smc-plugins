@@ -77,6 +77,7 @@ public class Mask_Largest implements PlugIn {
 		for (int i=0; i<width*height; i++)
 		{
 			if (pix[i]!=m_idx) pix[i]=0&0xffff;
+			else pix[i]=255;
 		}
 		img.updateAndDraw();
 

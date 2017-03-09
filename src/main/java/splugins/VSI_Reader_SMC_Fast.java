@@ -135,8 +135,9 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		img=WindowManager.getCurrentImage();
 		if (is_composite==true) 
 		{
-			IJ.log("Turn it back to composite");
-			IJ.run("Stack to Hyperstack...", "order=xyczt(default) channels=3 slices="+(img.getNSlices()/3)+" frames=1 display=Composite");
+			IJ.log("Turn it back to composite"+img.getStackSize());
+			
+			IJ.run("Stack to Hyperstack...", "order=xyczt(default) channels=3 slices="+(img.getStackSize()/3)+" frames=1 display=Composite");
 		}
 		img=WindowManager.getCurrentImage();
 		
@@ -530,7 +531,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 					IJ.run("Bio-Formats Importer", "open="+r.fname+" color_mode=Default view=Hyperstack stack_order=XYCZT series_"+dezoom_scale);
 					if (create_stack)
 					{
-						addOneToAll(WindowManager.getCurrentImage());
+						if (!(WindowManager.getCurrentImage().getType()==ImagePlus.GRAY16)) addOneToAll(WindowManager.getCurrentImage());
 						IJ.run("Canvas Size...", "width="+max_width+" height="+max_height+" position=Center");
 						WindowManager.getCurrentImage().setTitle("img"+(i+1));
 						//concat_list=concat_list+"image"+(i+1)+"="+WindowManager.getCurrentImage().getTitle()+" ";
