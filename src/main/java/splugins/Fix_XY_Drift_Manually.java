@@ -39,6 +39,15 @@ public class Fix_XY_Drift_Manually implements PlugIn {
 		double [] kx=new double[rois.length];
 		double [] ky=new double[rois.length];
 		
+		GenericDialog gd = new GenericDialog("Interpolate?");
+		gd.addCheckbox("Interpolate?", false);
+		gd.showDialog();
+		if (gd.wasCanceled()) 
+		{
+			return;
+		}
+		boolean interpolate=gd.getNextBoolean();
+		
 		for (int i=0; i<frames; i++)
 		{
 			f_vals[i]=i+1;
@@ -48,20 +57,34 @@ public class Fix_XY_Drift_Manually implements PlugIn {
 			Polygon p=rois[i].getPolygon();
 			kx[i]=p.xpoints[0];
 			ky[i]=p.ypoints[0];
-			kf[i]=manager.getSliceNumber(manager.getName(i));
+			int slice_number=manager.getSliceNumber(manager.getName(i));
+			kf[i]=slice_number/channels/slices+1;
 			IJ.log("X,Y,Z: "+kx[i]+","+ky[i]+","+kf[i]);
 		}
 		double [] x_vals=Fix_Z_Drift_Manually.linear_extrapolate_interpolate(kf, kx, f_vals);
 		double [] y_vals=Fix_Z_Drift_Manually.linear_extrapolate_interpolate(kf, ky, f_vals);
+		IJ.log("Bool: "+interpolate);
 		
 		for (int i=0; i<frames; i++)
 		{
 			float x=(float) (x_vals[i]-x_vals[0]);
 			float y=(float) (y_vals[i]-y_vals[0]);
 			IJ.log("Shift: "+i+","+x+","+y);
-			ImageProcessor tmp=imp.getStack().getProcessor((int) f_vals[i]);
-			tmp.setInterpolationMethod(ImageProcessor.BICUBIC);
-			tmp.translate(-x, -y);
+			if (interpolate==false)
+			{
+				x=Math.round(x);
+				y=Math.round(y);
+			}
+			IJ.log("Shift: "+i+","+x+","+y);
+			for (int c=0; c<channels; c++)
+			{
+				for (int s=0; s<slices; s++)
+				{
+					ImageProcessor tmp=imp.getStack().getProcessor((int) (f_vals[i]-1)*channels*slices+s*channels+c+1);
+					tmp.setInterpolationMethod(ImageProcessor.BILINEAR);
+					tmp.translate(-x, -y);
+				}
+			}
 		}
 		imp.updateAndDraw();
 
