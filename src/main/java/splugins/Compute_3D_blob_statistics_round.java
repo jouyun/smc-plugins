@@ -98,7 +98,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
         }
         
         //If going to display results in channel 3, leave this in
-        for (int z=0; z<slices; z++) for (int x=0; x<width; x++) for (int y=0; y<height; y++) raw_data[2][z][x+y*width]=0;
+        if (threshold<10000000) for (int z=0; z<slices; z++) for (int x=0; x<width; x++) for (int y=0; y<height; y++) raw_data[2][z][x+y*width]=0;
         
         //Find a blob, process a blob        
 		int num_found=0; 
@@ -196,7 +196,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
 			else
 			{
 				//data[curpt.x][curpt.y][curpt.z][2]=128;
-				data[2][curpt.z][curpt.x+curpt.y*width]=tmp;
+				//data[2][curpt.z][curpt.x+curpt.y*width]=tmp;
 			}
 		}
 	}
@@ -245,7 +245,7 @@ public class Compute_3D_blob_statistics_round implements PlugIn{
 		//gd.addNumericField("First shell higher radius", 3, 0);
 		//gd.addNumericField("Second shell lower radius", 5, 0);
 		//gd.addNumericField("Second shell higher radius", 5, 0);
-		gd.addNumericField("Threshold:  ", 1500, 0);
+		gd.addNumericField("Threshold:  ", 0, 0);
 		gd.showDialog();
 		if (gd.wasCanceled()) 
 		{
