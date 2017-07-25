@@ -243,6 +243,7 @@ public class seeded_multipoint_adaptive_region_grow implements PlugIn{
 				}
 				rslt.addValue("Mean_"+(c+1), accumulator/curlist.size());
 			}
+			rslt.addValue("Area", curlist.size());
 			ctr++;
 			
 		}
