@@ -118,6 +118,7 @@ public class add_channel implements PlugIn{
 			}
 
 		}
+		new_imp.setDisplayMode(IJ.COMPOSITE);
 		new_imp.setOpenAsHyperStack(true);
 		new_imp.setDimensions(channels+1, slices, frames);
 		new_imp.show();

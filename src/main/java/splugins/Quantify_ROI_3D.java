@@ -202,7 +202,7 @@ public class Quantify_ROI_3D implements PlugIn {
 				for (int c=0; c<channels; c++)
 				{
 					if (cp.z<0||cp.z>=slices) continue;
-					short [] pix=(short []) img.getStack().getPixels(cp.z*channels+c+1);
+					float [] pix=(float []) img.getStack().getPixels(cp.z*channels+c+1);
 					valids[c]++;
 					if (pix[cp.x+cp.y*width]<thresholds[c]) continue;
 					sums[c]+=pix[cp.x+cp.y*width];

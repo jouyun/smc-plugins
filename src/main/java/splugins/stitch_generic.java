@@ -55,12 +55,15 @@ public class stitch_generic {
 	
 	static public void do_stitch(String save_directory, int channels, int slices)
 	{
-		IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+		IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_directory+"] layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
 		//IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
 		if (WindowManager.getCurrentImage().getTitle().equals("Fused")) 
 		{
+			IJ.log("Channels slices" +channels+" "+slices);
+			IJ.log("Image channels slices frames "+WindowManager.getCurrentImage().getNChannels()+" "+WindowManager.getCurrentImage().getNSlices()+" "+WindowManager.getCurrentImage().getNFrames()+" " );
 			IJ.run("Delete Slice", "delete=channel");
 			IJ.run("Stack to Hyperstack...", "order=xyczt(default) channels="+channels+" slices="+slices+" frames=1 display=Grayscale");
+			
 
 		}
 

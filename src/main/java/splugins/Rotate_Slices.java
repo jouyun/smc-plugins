@@ -1,9 +1,11 @@
 package splugins;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
+import ij.process.ImageProcessor;
 
 public class Rotate_Slices implements PlugIn {
 
@@ -25,7 +27,10 @@ public class Rotate_Slices implements PlugIn {
 		{
 			for (int c=0; c<channels; c++)
 			{
-				img.getStack().getProcessor(1+c+(s-1)*channels).rotate(angle);
+				ImageProcessor ip=img.getStack().getProcessor(1+c+(s-1)*channels);
+				ip.setBackgroundValue(0.000000);
+				IJ.log("Bacgkground: "+ip.getBackgroundValue());
+				ip.rotate(angle);
 			}
 		}
 		img.updateAndDraw();

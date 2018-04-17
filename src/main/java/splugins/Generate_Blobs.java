@@ -7,14 +7,18 @@ import java.util.Random;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.GenericDialog;
 import ij.gui.NewImage;
+import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 
 public class Generate_Blobs implements PlugIn {
 
-	static int img_size=256;
-	static int blob_size=5;
-	static int num_images=10000;
+	int img_size=256;
+	int blob_size=5;
+	int num_images=10;
+	ImagePlus newimg;
+	float [] current_pix;
 	
 	public class MyIntPoint {
 		int x;
@@ -39,6 +43,8 @@ public class Generate_Blobs implements PlugIn {
 		ArrayList <MyIntPoint> pixels;
 		ArrayList <MyIntPoint> edges;
 		blob_params()
+		{}
+		boolean make_blob()
 		{
 			x=Math.random()*img_size;
 			y=Math.random()*img_size;
@@ -63,6 +69,27 @@ public class Generate_Blobs implements PlugIn {
 			edges=new ArrayList<MyIntPoint>();
 			int scalar=6;
 			int [][]tmp_array=new int[scalar*blob_size+1][scalar*blob_size+1];
+			
+			//First check to see if it is already there, if so, skip it
+			boolean already_there=false;
+			for (int xx=0; xx<blob_size*scalar+1; xx++)
+			{
+				for (int yy=0; yy<blob_size*scalar+1; yy++)
+				{
+					double cx=x+xx-scalar/2*blob_size;
+					double cy=y+yy-scalar/2*blob_size;
+					double dis=Math.sqrt((cx-xa)*(cx-xa)+(cy-ya)*(cy-ya))+Math.sqrt((cx-xb)*(cx-xb)+(cy-yb)*(cy-yb));
+					if (dis<=2*a)
+					{
+						int ix=(int)Math.round(cx), iy=(int)Math.round(cy);
+						if (ix<0||ix>=newimg.getWidth()||iy<0||iy>=newimg.getHeight()) continue;
+						if (current_pix[ix+iy*newimg.getWidth()]>0) already_there=true;
+						//IJ.log(""+ix+","+iy+","+newimg.getWidth()+","+current_pix.length);
+					}
+				}
+			}
+			if (already_there) return false;
+			//Made it, so must not already be blob here
 			for (int xx=0; xx<blob_size*scalar+1; xx++)
 			{
 				for (int yy=0; yy<blob_size*scalar+1; yy++)
@@ -94,29 +121,55 @@ public class Generate_Blobs implements PlugIn {
 					}
 				}
 			}
-			
+			return true;
 		}
 	};
 
 	@Override
 	public void run(String arg0) {
+		GenericDialog gd=new GenericDialog("Choose parameters");
+		gd.addNumericField("Number of images", 10000, 0);
+		gd.addNumericField("Blob size", 5, 0);
+		gd.addNumericField("Number of blobs per image", 150,0);
+		gd.addNumericField("Image width/height", 256,0);
+		gd.addCheckbox("Randomize number of blobs: ", false);
+		gd.showDialog();
+		
+		num_images=(int)gd.getNextNumber();
+		blob_size=(int)gd.getNextNumber();
+		int number_blobs=(int)gd.getNextNumber();
+		img_size=(int)gd.getNextNumber();
+		boolean randomize=gd.getNextBoolean();
 		// TODO Auto-generated method stub
-		ImagePlus newimg=NewImage.createFloatImage("Img", img_size, img_size, 2*num_images, NewImage.FILL_BLACK);
+		newimg=NewImage.createFloatImage("Img", img_size, img_size, 2*num_images, NewImage.FILL_BLACK);
+		ResultsTable rslt;
+		rslt=ResultsTable.getResultsTable();
+		
 		for (int f=0; f<num_images; f++)
 		{
 			
 			float [] pix=(float [])newimg.getStack().getProcessor(f+1).getPixels();
 			float [] edge=(float [])newimg.getStack().getProcessor(num_images+f+1).getPixels();
-			blob_params [] blobs=new blob_params[150];
+			current_pix=pix;
+			blob_params [] blobs;
+			if (randomize) blobs=new blob_params[(int) Math.round(Math.random()*number_blobs)]; 
+			else blobs=new blob_params[number_blobs];
 			Random RG=new Random();
 			
+			int success_counter=0;
 			for (int i=0; i<blobs.length; i++)
 			{
 				blobs[i]=new blob_params();
+				if (blobs[i].make_blob()) success_counter++;
 				for (ListIterator jF=blobs[i].pixels.listIterator();jF.hasNext();)
 				{
 					MyIntPoint curpt=(MyIntPoint)jF.next();
-					if (curpt.x>=0&&curpt.x<img_size&&curpt.y>=0&&curpt.y<img_size) pix[curpt.x+curpt.y*img_size]=(float) (255*(1+RG.nextGaussian()/12));
+					if (curpt.x>=0&&curpt.x<img_size&&curpt.y>=0&&curpt.y<img_size) 
+					{
+						pix[curpt.x+curpt.y*img_size]=(float) (255*(1+RG.nextGaussian()/12));
+						edge[curpt.x+curpt.y*img_size]=2;
+					}
+					
 				}
 				for (ListIterator jF=blobs[i].edges.listIterator();jF.hasNext();)
 				{
@@ -124,9 +177,15 @@ public class Generate_Blobs implements PlugIn {
 					if (curpt.x>=0&&curpt.x<img_size&&curpt.y>=0&&curpt.y<img_size) edge[curpt.x+curpt.y*img_size]=1;
 				}
 			}
+			if (randomize)
+			{
+				rslt.incrementCounter();
+				rslt.addValue("Blobs", success_counter);
+			}
 			IJ.showProgress((double)f/(num_images-1));
 			
 		}
+		if (randomize) rslt.show("Results");
 		/*
 		for (int i=0; i<blobs.length; i++)
 		{
