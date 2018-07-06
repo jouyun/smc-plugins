@@ -71,7 +71,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Stack;
 
-public class find_blobs_3D_quantify implements PlugIn {
+public class find_blobs_3D_mask_subspots implements PlugIn {
 
 	@Override
 	public void run(String arg) {
@@ -84,18 +84,16 @@ public class find_blobs_3D_quantify implements PlugIn {
 		dlg.addNumericField("Threshold", 500, 0);
 		dlg.addNumericField("Minimum size", 500, 0);
 		dlg.addNumericField("Max size: ", 30000, 0);
-		dlg.addNumericField("Channel to segment on: ", 1, 0);
+		dlg.addNumericField("Segment on what channel: ", 1, 0);
+		dlg.addNumericField("Quantify on what channel: ", 1, 0);
 		dlg.addNumericField("Filter ratio less than:", 1, 1);
-		dlg.addCheckbox("Apply filter? ", true);
-		dlg.addCheckbox("Make ROIs?" , true);
 		dlg.showDialog();
 		float threshold=(float) dlg.getNextNumber();
 		int minimum_size=(int)dlg.getNextNumber();
 		int maximum_size=(int)dlg.getNextNumber();
 		int channel_to_segment=(int)dlg.getNextNumber();
+		int channel_to_quantify=(int)dlg.getNextNumber();
 		float ratio=(float)dlg.getNextNumber();
-		boolean apply_filter=dlg.getNextBoolean();
-		boolean make_ROIs=dlg.getNextBoolean();
 		
 		float [] pix=new float[width*height*depth];
 		for (int i=0; i<depth; i++)
@@ -104,20 +102,20 @@ public class find_blobs_3D_quantify implements PlugIn {
 			for (int k=0; k<width*height; k++) pix[i*width*height+k]=tmp[k];
 		}
 		find_blobs_3D blobber=new find_blobs_3D();
-		ArrayList <ArrayList <int []>> rtn;
+		ArrayList <ArrayList <int []>> blob_list;
 		
-		rtn=blobber.runme(pix, img.getWidth(), img.getHeight(), depth, threshold);
+		//Find the blobs using find_blobs_3D
+		blob_list=blobber.runme(pix, img.getWidth(), img.getHeight(), depth, threshold);
 		
+		//Make a new mask image
 		ImagePlus new_img=NewImage.createByteImage("TempImg", width, height, depth, NewImage.FILL_BLACK);
 		int idx=0;
 		int number_big_enough=0;
 		ResultsTable the_table=ResultsTable.getResultsTable();
-		the_table.reset();
 
-		Utility3D my3D=new Utility3D();
-		short [] imgarray=my3D.blobarray_to_imgarray(rtn, width, height, depth);
+		//Quantify all of the blobs for the given channel
 		int marked_blobs=0;
-		for (ListIterator jF=rtn.listIterator(); jF.hasNext();)
+		for (ListIterator jF=blob_list.listIterator(); jF.hasNext();)
 		{
 			idx++;
 			ArrayList <int []> current_list=(ArrayList <int []>)jF.next();
@@ -126,28 +124,22 @@ public class find_blobs_3D_quantify implements PlugIn {
 			if (current_list.size()<minimum_size) continue;
 			if (current_list.size()>maximum_size) continue;
 						
-			double [] averages=new double[img.getNChannels()];
+			double average=0;
+			double stdev=0;
 			number_big_enough++;
 			//Tabulate statistics
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
 				int [] current_point=(int [])iF.next();
-				for (int i=0; i<img.getNChannels(); i++)
-				{
-					float [] old_pix=(float []) img.getStack().getProcessor(i+(current_point[2])*img.getNChannels()+cur_frame*img.getNChannels()*depth+1).getPixels();
-					averages[i]=averages[i]+old_pix[current_point[0]+current_point[1]*width];
-				}
+				float [] old_pix=(float []) img.getStack().getProcessor(channel_to_quantify+(current_point[2])*img.getNChannels()+cur_frame*img.getNChannels()*depth).getPixels();
+				average=average+old_pix[current_point[0]+current_point[1]*width];
+				stdev=stdev+old_pix[current_point[0]+current_point[1]*width]*old_pix[current_point[0]+current_point[1]*width];
 			}
-			for (int i=0; i<img.getNChannels(); i++) 
-			{
-				averages[i]=averages[i]/(double)current_list.size();
-			}
+			average=average/(double)current_list.size();
+			stdev=Math.sqrt(stdev/(double)current_list.size()-average*average);
+
 			//If meets criteria, log in results
 			
-			if (apply_filter&&averages[0]<ratio*averages[3]) 
-			{
-				continue;
-			}
 			the_table.incrementCounter();
 			the_table.addValue("Volume", (double)current_list.size());
 			
@@ -156,36 +148,29 @@ public class find_blobs_3D_quantify implements PlugIn {
 			the_table.addValue("Y", tmp_pt[1]);
 			the_table.addValue("Z", tmp_pt[2]);
 			
-			for (int i=0; i<img.getNChannels(); i++) 
-			{
-				the_table.addValue("Channel"+(i+1), averages[i]);
-			}
+			the_table.addValue("Average", average);
+			the_table.addValue("Stdev", stdev);
+			the_table.addValue("File", img.getTitle());
+			
 			marked_blobs++;
 			float average_x=0, average_y=0, average_z=0;
+			int pixels_positive=0;
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
 				int [] current_point=(int [])iF.next();
 				
 				byte [] new_pix=(byte []) new_img.getStack().getProcessor(current_point[2]+1).getPixels();
-				new_pix[current_point[0]+current_point[1]*width]=(byte)marked_blobs;
+				float [] old_pix=(float []) img.getStack().getProcessor(channel_to_quantify+(current_point[2])*img.getNChannels()+cur_frame*img.getNChannels()*depth).getPixels();
 				
-				average_x+=current_point[0];
-				average_y+=current_point[1];
-				average_z+=current_point[2];
+				float current_value=old_pix[current_point[0]+current_point[1]*width];
+				if ((current_value-average)>ratio*stdev)
+				{
+					new_pix[current_point[0]+current_point[1]*width]=(byte)marked_blobs;
+					pixels_positive++;
+				}
 			}	
+			the_table.addValue("Positive", pixels_positive);
 			
-			if (make_ROIs)
-			{
-				//Roi my_roi=new Roi(average_x/current_list.size(),average_y/current_list.size(),1,1);
-				PointRoi my_roi=new PointRoi(average_x/current_list.size(),average_y/current_list.size());
-				WindowManager.setTempCurrentImage(img);
-				img.setPosition(channel_to_segment, (int)Math.floor(average_z/current_list.size()), 1);
-				RoiManager manager=RoiManager.getInstance();
-				
-				if (manager==null) manager=new RoiManager();
-				
-				manager.addRoi(my_roi);
-			}
 		}
 		
 		/*byte [] byte_arr=Dilate3D.make_3D_byte(new_img, 0, 0);
@@ -193,8 +178,8 @@ public class find_blobs_3D_quantify implements PlugIn {
 		ImagePlus new_img2=Dilate3D.make_3D_ImagePlusByte(new_byte_arr, width, height, depth);
 		new_img2.show(); 
 		new_img2.updateAndDraw();*/
-		the_table.incrementCounter();
-		the_table.addValue("Total", number_big_enough);
+		/*the_table.incrementCounter();
+		the_table.addValue("Total", number_big_enough);*/
 		the_table.show("Results");
 		//IJ.log(""+marked_blobs+"/"+number_big_enough);
 		new_img.show();

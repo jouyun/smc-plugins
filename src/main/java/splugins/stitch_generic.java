@@ -19,6 +19,13 @@ public class stitch_generic {
 		do_stitch(save_directory, imp.getNChannels(), imp.getNSlices());
 	}
 	
+	static public void stitch_projection_img(ImagePlus imp, float [] x_pos, float [] y_pos, String save_directory)
+	{
+		write_tile_config( save_directory, x_pos, y_pos);
+		project_all_and_dump_to_directory(imp, save_directory);
+		do_stitch_no_delete(save_directory, imp.getNChannels(), imp.getNSlices());
+	}
+	
 	static public void project_and_dump_to_directory(ImagePlus imp, String save_directory, int channel_to_project)
 	{
 		int width=imp.getWidth(); 
@@ -53,6 +60,30 @@ public class stitch_generic {
 		
 	}
 	
+	static public void project_all_and_dump_to_directory(ImagePlus imp, String save_directory)
+	{
+		project_all_and_dump_to_directory(imp, save_directory, ZProjector.MAX_METHOD);
+	}
+	
+	static public void project_all_and_dump_to_directory(ImagePlus imp, String save_directory, int projection_method)
+	{
+		int width=imp.getWidth(); 
+		int height=imp.getHeight();
+		int slices=imp.getNSlices();
+		int frames=imp.getNFrames();
+		int channels=imp.getNChannels();
+		
+		ZProjector zproj=new ZProjector(imp);
+		zproj.setMethod(projection_method);
+		zproj.setStartSlice(1);
+		zproj.setStopSlice(slices);
+		zproj.doHyperStackProjection(true);
+		ImagePlus z_projection=zproj.getProjection();
+		
+		SaveMultipageImageSequence.save_sequence(z_projection, save_directory, "Img");
+		
+	}
+	
 	static public void do_stitch(String save_directory, int channels, int slices)
 	{
 		IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_directory+"] layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
@@ -68,6 +99,12 @@ public class stitch_generic {
 		}
 
 	}
+	
+	static public void do_stitch_no_delete(String save_directory, int channels, int slices)
+	{
+		IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_directory+"] layout_file=out.txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+	}
+	
 	
 	static public void write_tile_config(String save_directory, float [] x_pos, float [] y_pos)
 	{

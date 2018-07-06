@@ -34,5 +34,16 @@ public class SaveMultipageImageSequence implements PlugIn {
 		}
 	}
 	
+	static public void save_sequence(ImagePlus img, String save_directory, String file_prefix)
+	{
+		int frames=img.getNFrames();
+		for (int f=0; f<frames; f++)
+		{
+			ImagePlus current_img=new Duplicator().run(img, 1, img.getNChannels(), 1, img.getNSlices(), f+1, f+1);
+			IJ.saveAsTiff(current_img, save_directory+File.separator+file_prefix+IJ.pad(f, 4)+".tif");
+			current_img.close();
+		}
+	}
+	
 
 }
