@@ -65,7 +65,7 @@ public class Mask_Largest implements PlugIn {
 		{
 			indices[0xffff&pix[i]]++;
 		}
-		int max=0, m_idx=0;
+		int max=0, m_idx=-1;
 		for (int i=1; i<number_indices; i++)
 		{
 			if (indices[i]>max)
@@ -74,6 +74,7 @@ public class Mask_Largest implements PlugIn {
 				m_idx=i;
 			}
 		}
+		if (m_idx==0) m_idx=-1;
 		for (int i=0; i<width*height; i++)
 		{
 			if (pix[i]!=m_idx) pix[i]=0&0xffff;

@@ -22,8 +22,10 @@ public class Stitch_Nikon_Data implements PlugIn {
 			// 
 		GenericDialog gd=new GenericDialog("Which channel?");
 		gd.addNumericField("Channel to use for stitch", 1, 0);
+		gd.addChoice("Fusion method: ", new String[]{"Max. Intensity", "Linear Blending", "Intensity of random input tile"}, "Max. Intensity");
 		gd.showDialog();
 		int stitch_channel=(int)gd.getNextNumber();
+		String fusion_method=gd.getNextChoice();
 		DirectoryChooser dir=new DirectoryChooser("Choose the directory");
 		String dir_name=dir.getDirectory();
 		File folder=new File(dir_name);
@@ -62,6 +64,7 @@ public class Stitch_Nikon_Data implements PlugIn {
 				
 			}
 		}
+		IJ.log("Channels, slices, frames:  "+ cs+","+ss+","+(starting_index-1));  
 		concat_string=concat_string+"image"+starting_index+"=[-- None --]";
 		IJ.run("Concatenate...", concat_string);
 		IJ.run("Stack to Hyperstack...", "order=xyczt(default) channels="+cs+" slices="+ss+" frames="+(starting_index-1)+" display=Grayscale");
@@ -85,6 +88,7 @@ public class Stitch_Nikon_Data implements PlugIn {
 		
 		ImagePlus img=WindowManager.getCurrentImage();
 		float pix_size=(float) ((float)img.getCalibration().pixelWidth*1.2);
+		pix_size=(float) ((float)img.getCalibration().pixelWidth);
 		/*if (override_scaling) 
 		{
 			pix_size=(float)pixel_scaling;
@@ -95,7 +99,7 @@ public class Stitch_Nikon_Data implements PlugIn {
 			y_pos[j]=(float) (y_pos[j]/pix_size);
 		}
 		
-		stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1);
+		stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1, fusion_method);
 
 	}
 

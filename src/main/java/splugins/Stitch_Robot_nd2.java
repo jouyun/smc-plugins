@@ -35,6 +35,7 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		gd.addNumericField("Channel to use for stitch?", 1, 0);
 		gd.addCheckbox("Override scaling?", false);
 		gd.addNumericField("Pixel Size", 0.780, 3);
+		gd.addChoice("Fusion method: ", new String[]{"Max. Intensity", "Linear Blending", "Intensity of random input tile"}, "Max. Intensity");
 		gd.showDialog();
 		
 		String base_dir=gd.getNextString()+File.separator;
@@ -44,6 +45,7 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		int stitch_channel=(int)gd.getNextNumber();
 		boolean override_scaling=gd.getNextBoolean();
 		double pixel_scaling=gd.getNextNumber();
+		String fusion_method=gd.getNextChoice();
 		String base_image_name="Plate"+IJ.pad(plate, 3)+"_Well"+well+"_Count"+IJ.pad(object,5)+"_Point";
 		
 		
@@ -117,7 +119,7 @@ public class Stitch_Robot_nd2 implements PlugIn {
 			xy_pts[1][j]=(float) (xy_pts[1][j]/pix_size);
 		}
 		
-		stitch_generic.stitch_img(WindowManager.getCurrentImage(), xy_pts[0], xy_pts[1], base_dir, stitch_channel-1);
+		stitch_generic.stitch_img(WindowManager.getCurrentImage(), xy_pts[0], xy_pts[1], base_dir, stitch_channel-1, fusion_method);
 
 	}
 	public static float[][] get_points_from_file(String filename)

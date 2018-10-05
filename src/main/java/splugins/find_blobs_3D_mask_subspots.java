@@ -69,7 +69,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Stack;
 
 public class find_blobs_3D_mask_subspots implements PlugIn {
 
@@ -87,6 +86,7 @@ public class find_blobs_3D_mask_subspots implements PlugIn {
 		dlg.addNumericField("Segment on what channel: ", 1, 0);
 		dlg.addNumericField("Quantify on what channel: ", 1, 0);
 		dlg.addNumericField("Filter ratio less than:", 1, 1);
+		dlg.addNumericField("Percentile for stdev:", 50, 1);
 		dlg.showDialog();
 		float threshold=(float) dlg.getNextNumber();
 		int minimum_size=(int)dlg.getNextNumber();
@@ -94,6 +94,7 @@ public class find_blobs_3D_mask_subspots implements PlugIn {
 		int channel_to_segment=(int)dlg.getNextNumber();
 		int channel_to_quantify=(int)dlg.getNextNumber();
 		float ratio=(float)dlg.getNextNumber();
+		float ptile=(float)dlg.getNextNumber();
 		
 		float [] pix=new float[width*height*depth];
 		for (int i=0; i<depth; i++)
@@ -127,6 +128,7 @@ public class find_blobs_3D_mask_subspots implements PlugIn {
 			double average=0;
 			double stdev=0;
 			number_big_enough++;
+			List <Float> stk=new ArrayList<Float>();
 			//Tabulate statistics
 			for (ListIterator iF=current_list.listIterator(); iF.hasNext();)
 			{
@@ -134,10 +136,26 @@ public class find_blobs_3D_mask_subspots implements PlugIn {
 				float [] old_pix=(float []) img.getStack().getProcessor(channel_to_quantify+(current_point[2])*img.getNChannels()+cur_frame*img.getNChannels()*depth).getPixels();
 				average=average+old_pix[current_point[0]+current_point[1]*width];
 				stdev=stdev+old_pix[current_point[0]+current_point[1]*width]*old_pix[current_point[0]+current_point[1]*width];
+				stk.add(old_pix[current_point[0]+current_point[1]*width]);
 			}
 			average=average/(double)current_list.size();
 			stdev=Math.sqrt(stdev/(double)current_list.size()-average*average);
 
+			//Make new stdev based on the percentile
+			Collections.sort(stk);
+			double t_average=0.0, t_sigma=0.0;
+			int num_pix=0;
+			for (int i=0; i<(int)(stk.size()*ptile/100.0f); i++)
+			{
+				t_average=t_average+(double)stk.get(i);
+				t_sigma=t_sigma+(double)stk.get(i)*(double)stk.get(i);
+				num_pix++;
+			}
+			t_average=t_average/(double)(num_pix);
+			t_sigma=(double)Math.sqrt(t_sigma/(double)(num_pix)-t_average*t_average);
+			stdev=t_sigma;
+			average=t_average;
+			
 			//If meets criteria, log in results
 			
 			the_table.incrementCounter();
@@ -151,7 +169,6 @@ public class find_blobs_3D_mask_subspots implements PlugIn {
 			the_table.addValue("Average", average);
 			the_table.addValue("Stdev", stdev);
 			the_table.addValue("File", img.getTitle());
-			
 			marked_blobs++;
 			float average_x=0, average_y=0, average_z=0;
 			int pixels_positive=0;

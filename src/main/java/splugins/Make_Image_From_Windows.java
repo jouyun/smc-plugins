@@ -94,6 +94,7 @@ public class Make_Image_From_Windows implements PlugIn{
 		}
 		new_img.setDimensions(channels, slices,1);
 		new_img.setOpenAsHyperStack(true);
+		new_img.setDisplayMode(IJ.GRAYSCALE);
 		new_img.show();
 		new_img.updateAndDraw();
 	}

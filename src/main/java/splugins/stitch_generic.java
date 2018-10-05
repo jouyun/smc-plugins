@@ -12,11 +12,11 @@ import ij.gui.NewImage;
 import ij.plugin.ZProjector;
 
 public class stitch_generic {
-	static public void stitch_img(ImagePlus imp, float [] x_pos, float [] y_pos, String save_directory, int channel_to_project)
+	static public void stitch_img(ImagePlus imp, float [] x_pos, float [] y_pos, String save_directory, int channel_to_project, String fusion_method)
 	{
 		write_tile_config( save_directory, x_pos, y_pos);
 		project_and_dump_to_directory(imp, save_directory, channel_to_project);
-		do_stitch(save_directory, imp.getNChannels(), imp.getNSlices());
+		do_stitch(save_directory, imp.getNChannels(), imp.getNSlices(), fusion_method);
 	}
 	
 	static public void stitch_projection_img(ImagePlus imp, float [] x_pos, float [] y_pos, String save_directory)
@@ -55,8 +55,16 @@ public class stitch_generic {
 				}
 			}
 			new_img.setDimensions(channels*slices+1, 1, 1);
-			IJ.saveAsTiff(new_img, save_directory+"Img"+IJ.pad(f, 4)+".tif");
+			//IJ.saveAsTiff(new_img, save_directory+"Img"+IJ.pad(f, 4)+".tif");
+			new_img.show();
+			new_img.updateAndDraw();
+			IJ.selectWindow(new_img.getTitle());
+			IJ.log("Currently on: "+WindowManager.getCurrentImage().getTitle());
+			IJ.run("Save As Tiff", "save=["+save_directory+"Img"+IJ.pad(f, 4)+".tif]");
+			new_img.close(	);
 		}
+		imp.changes=false;
+		//imp.close();
 		
 	}
 	
@@ -84,15 +92,17 @@ public class stitch_generic {
 		
 	}
 	
-	static public void do_stitch(String save_directory, int channels, int slices)
+	static public void do_stitch(String save_directory, int channels, int slices, String fusion_method)
 	{
-		IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_directory+"] layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+		IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_directory+"] layout_file=out.txt fusion_method=["+fusion_method+"] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+		//IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory=["+save_directory+"] layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
 		//IJ.run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+save_directory+" layout_file=out.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
 		if (WindowManager.getCurrentImage().getTitle().equals("Fused")) 
 		{
-			IJ.log("Channels slices" +channels+" "+slices);
+			IJ.log("Channels slices " +channels+" "+slices);
 			IJ.log("Image channels slices frames "+WindowManager.getCurrentImage().getNChannels()+" "+WindowManager.getCurrentImage().getNSlices()+" "+WindowManager.getCurrentImage().getNFrames()+" " );
 			IJ.run("Delete Slice", "delete=channel");
+			IJ.selectWindow("Fused");
 			IJ.run("Stack to Hyperstack...", "order=xyczt(default) channels="+channels+" slices="+slices+" frames=1 display=Grayscale");
 			
 
