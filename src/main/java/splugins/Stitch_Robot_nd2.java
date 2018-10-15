@@ -155,7 +155,7 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		}
 		catch (Exception e) 
 		{
-			IJ.log("Guess it didn't exist");
+			IJ.log("Guess it didn't exists");
 		}
 		return null;
 	}
