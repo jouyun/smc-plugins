@@ -114,12 +114,14 @@ public class tensorflow_test implements PlugIn {
 	        		{
 	        			for (int x=0; x<width; x++)
 	        			{
-	        				current_slice[x+y*width]=dec[f][x][y][0];
+	        				current_slice[x+y*width]=dec[f][x][y][c];
 	        			}
 	        		}
             	}
             }
         }
+        newimg.setDimensions(output_channels, 1, frames);
+        newimg.setOpenAsHyperStack(true);
         newimg.show();
     	newimg.updateAndDraw();
     }
