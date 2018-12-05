@@ -83,7 +83,13 @@ public class Make_Image_From_Windows implements PlugIn{
 							{
 								for (int yy=0; yy<window_size; yy++)
 								{
-									if (new_pix[xx+x*shift_size+(yy+y*shift_size)*width]>0) new_pix[xx+x*shift_size+(yy+y*shift_size)*width]=(pix[xx+yy*window_size]+new_pix[xx+x*shift_size+(yy+y*shift_size)*width])/2;
+									if (new_pix[xx+x*shift_size+(yy+y*shift_size)*width]>0) 
+									{
+										float old=new_pix[xx+x*shift_size+(yy+y*shift_size)*width];
+										float news=pix[xx+yy*window_size];
+										//new_pix[xx+x*shift_size+(yy+y*shift_size)*width]=(pix[xx+yy*window_size]+new_pix[xx+x*shift_size+(yy+y*shift_size)*width])/2;
+										if (news>old) new_pix[xx+x*shift_size+(yy+y*shift_size)*width]=news;
+									}
 									else new_pix[xx+x*shift_size+(yy+y*shift_size)*width]=pix[xx+yy*window_size];
 								}
 							}
