@@ -23,9 +23,13 @@ public class Stitch_Nikon_Data implements PlugIn {
 		GenericDialog gd=new GenericDialog("Which channel?");
 		gd.addNumericField("Channel to use for stitch", 1, 0);
 		gd.addChoice("Fusion method: ", new String[]{"Max. Intensity", "Linear Blending", "Intensity of random input tile"}, "Max. Intensity");
+		gd.addCheckbox("Override scaling?", false);
+		gd.addNumericField("Actual scaling: ", 0.0, 3);
 		gd.showDialog();
 		int stitch_channel=(int)gd.getNextNumber();
 		String fusion_method=gd.getNextChoice();
+		boolean override_scaling=gd.getNextBoolean();
+		float scaler=(float)gd.getNextNumber();
 		DirectoryChooser dir=new DirectoryChooser("Choose the directory");
 		String dir_name=dir.getDirectory();
 		File folder=new File(dir_name);
@@ -89,10 +93,10 @@ public class Stitch_Nikon_Data implements PlugIn {
 		ImagePlus img=WindowManager.getCurrentImage();
 		float pix_size=(float) ((float)img.getCalibration().pixelWidth*1.2);
 		pix_size=(float) ((float)img.getCalibration().pixelWidth);
-		/*if (override_scaling) 
+		if (override_scaling) 
 		{
-			pix_size=(float)pixel_scaling;
-		}*/
+			pix_size=(float)scaler;
+		}
 		for (int j=0; j<x_pos.length; j++)
 		{
 			x_pos[j]=(float) (x_pos[j]/pix_size);
