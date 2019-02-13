@@ -10,7 +10,7 @@ import ij.io.DirectoryChooser;
 import ij.plugin.PlugIn;
 import splugins.Stitch_PE_Data.blocks_wrapper;
 
-public class Stitch_Nikon_Data implements PlugIn {
+public class Prepare_Nikon_Data_For_Stitch implements PlugIn {
 
 	@Override
 	public void run(String arg0) {
@@ -103,8 +103,8 @@ public class Stitch_Nikon_Data implements PlugIn {
 			x_pos[j]=(float) (x_pos[j]/pix_size);
 			y_pos[j]=(float) (y_pos[j]/pix_size);
 		}
-		
-		stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1, fusion_method);
+		stitch_generic.write_tile_config_alternative_name(dir_name, x_pos, y_pos, "Tiffs");
+		//stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1, fusion_method);
 
 	}
 

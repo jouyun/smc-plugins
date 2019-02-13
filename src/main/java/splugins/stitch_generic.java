@@ -19,6 +19,8 @@ public class stitch_generic {
 		do_stitch(save_directory, imp.getNChannels(), imp.getNSlices(), fusion_method);
 	}
 	
+	
+	
 	static public void stitch_projection_img(ImagePlus imp, float [] x_pos, float [] y_pos, String save_directory)
 	{
 		write_tile_config( save_directory, x_pos, y_pos);
@@ -125,7 +127,25 @@ public class stitch_generic {
 			
 			for (int i=0; i<x_pos.length; i++)
 			{
-				w.write("Img"+String.format("%04d", i)+".tif; ; ("+x_pos[i]+", "+y_pos[i]+")\n");
+				w.write("Img"+String.format("%04d", i)+".tif; ; ("+(x_pos[i]-x_pos[0])+", "+(y_pos[i]-y_pos[0])+")\n");
+			}
+			w.flush();
+			w.close();
+			//if(j==0) return;
+		}
+		catch (Exception e) {}
+	}
+	
+	static public void write_tile_config_alternative_name(String save_directory, float [] x_pos, float [] y_pos, String name)
+	{
+		try {
+			FileOutputStream fos=new FileOutputStream(save_directory+"out.txt");
+			Writer w= new BufferedWriter(new OutputStreamWriter(fos));
+			w.write("dim = 2\n");
+			
+			for (int i=0; i<x_pos.length; i++)
+			{
+				w.write(name+String.format("%04d", i)+".tif; ; ("+(x_pos[i]-x_pos[0])+", "+(y_pos[i]-y_pos[0])+")\n");
 			}
 			w.flush();
 			w.close();

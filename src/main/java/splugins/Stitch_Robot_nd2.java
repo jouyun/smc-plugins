@@ -115,8 +115,8 @@ public class Stitch_Robot_nd2 implements PlugIn {
 		}
 		for (int j=0; j<xy_pts[0].length; j++)
 		{
-			xy_pts[0][j]=(float) (xy_pts[0][j]/pix_size);
-			xy_pts[1][j]=(float) (xy_pts[1][j]/pix_size);
+			xy_pts[0][j]=(float) (xy_pts[0][j])/pix_size;
+			xy_pts[1][j]=(float) (xy_pts[1][j])/pix_size;
 		}
 		
 		stitch_generic.stitch_img(WindowManager.getCurrentImage(), xy_pts[0], xy_pts[1], base_dir, stitch_channel-1, fusion_method);

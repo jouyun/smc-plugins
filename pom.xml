@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
-			<version>1.50e</version>
+			<version>1.52e</version>
 		</dependency>
 		<dependency>
 			<groupId>org.freehep</groupId>
@@ -109,6 +109,16 @@
 					<mainClass>Process_Pixels</mainClass>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+			
 		</plugins>
 	</build>
 
