@@ -36,6 +36,7 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 	float drop_threshold;
 	float [] peak_intensities;
 	float [] points_added;
+	int z_ratio;
 	
 	class MyIntPoint
 	{
@@ -106,8 +107,10 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
         }
         color_idx=0;
         boolean done=false;
+        int loops=0;
 		while (!done)
 		{
+			loops++;
 			current_seed=0;
 			for (ListIterator jF=point_list.listIterator();jF.hasNext();)
 			{
@@ -120,8 +123,8 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 					check_neighbor(curpt.x-1, curpt.y, curpt.z);
 					check_neighbor(curpt.x, curpt.y+1, curpt.z);
 					check_neighbor(curpt.x, curpt.y-1, curpt.z);
-					check_neighbor(curpt.x,curpt.y,curpt.z+1);
-					check_neighbor(curpt.x,curpt.y,curpt.z-1);
+					if (loops%z_ratio==0) check_neighbor(curpt.x,curpt.y,curpt.z+1);
+					if (loops%z_ratio==0) check_neighbor(curpt.x,curpt.y,curpt.z-1);
 					/*if (check_neighbor(curpt.x+1, curpt.y,curpt.z)) ctr++;
 					if (check_neighbor(curpt.x-1, curpt.y, curpt.z)) ctr++;
 					if (check_neighbor(curpt.x, curpt.y+1, curpt.z)) ctr++;
@@ -181,6 +184,7 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 		gd.addNumericField("Drop Threshold", 0.2, 1);
 		gd.addNumericField("Minimum size", 30, 0);
 		gd.addNumericField("Maximum size", 500, 0);
+		gd.addNumericField("Z ratio", 1, 0);
 		gd.showDialog();
 		if (gd.wasCanceled()) 
 		{
@@ -197,6 +201,7 @@ public class seeded_region_grow_3D_no_merge implements PlugIn {
 		drop_threshold=(float)gd.getNextNumber();
 		minimum_pix=(int)gd.getNextNumber();
 		maximum_pix=(int)gd.getNextNumber();
+		z_ratio=(int)gd.getNextNumber();
 		return find_mask_points(mask_img);
 	}
 	
