@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.ListIterator;
 
 import ij.IJ;
@@ -36,6 +37,7 @@ public class Export_VSI_InOrder implements PlugIn {
 	
 	int n_rois=0;
 	String start_dir;
+	ArrayList <Integer> series_list=new ArrayList <Integer>();
 	ArrayList <My_ROI> master_list=new ArrayList <My_ROI>();
 	int [][] tray_list;
 	String prelude;
@@ -69,16 +71,22 @@ public class Export_VSI_InOrder implements PlugIn {
 		
 		int number_series=Get_Number_Series(file_name);
 		
-		int number_images=(number_series-first_series)/6;
+		
+		
+		for (int i=1; i<number_series; i++)
+		{
+			get_series_data(file_name, i);
+		}
+		
+		int number_images=series_list.size();
 		
 		double [][] organizer =new double [number_images][3];
-		
-		for (int i=0; i<number_images; i++)
+		for (int i=0; i<series_list.size(); i++)
 		{
-			Meta_Data md=get_meta_data(file_name, i*6+first_series);
+			Meta_Data md=get_meta_data(file_name, series_list.get(i));
 			organizer[i][0]=md.origin_x;
 			organizer[i][1]=md.origin_y;
-			organizer[i][2]=i;
+			organizer[i][2]=series_list.get(i);
 		}
 		
 		Manual_Tracker.vector_sort(organizer, false);
@@ -87,10 +95,11 @@ public class Export_VSI_InOrder implements PlugIn {
 		{
 			int cidx=(int) organizer[i][2];
 			IJ.log(file_name);
-			IJ.log(""+(cidx*6+first_series+1));
-			IJ.run("Bio-Formats Importer", "open=["+file_name+"] color_mode=Default view=Hyperstack stack_order=XYCZT series_"+(cidx*6+first_series+dezoom_scale));
+			IJ.log(""+(cidx));
+			IJ.run("Bio-Formats Importer", "open=["+file_name+"] color_mode=Default view=Hyperstack stack_order=XYCZT series_"+(cidx+dezoom_scale));
+			if (WindowManager.getCurrentImage().getNSlices()>1) IJ.run("Z Project...", "projection=[Average Intensity]");
 			IJ.run("Save As Tiff", "save=["+file_name+"_Img"+IJ.pad(i, 4)+".tif]");
-			IJ.run("Close");
+			IJ.run("Close All");
 		}
 	}
 	
@@ -138,6 +147,7 @@ public class Export_VSI_InOrder implements PlugIn {
 				
 				IJ.log(""+r.getSizeC());
 				
+				
 				String origin=(String)r.getSeriesMetadataValue("Origin #1");
 				String origin_x=origin.substring(1, origin.indexOf(","));
 				String origin_y=origin.substring(origin.indexOf(",")+1, origin.length()-1);
@@ -152,8 +162,9 @@ public class Export_VSI_InOrder implements PlugIn {
 				IJ.log("wid, hei, ox, oy, pix:  "+rtnval.width+","+rtnval.height+","+rtnval.origin_x+","+rtnval.origin_y+","+rtnval.pixel_size);
 				
 			} catch (FormatException e) {
-				// TODO Auto-generated catch block
+				IJ.log("Ooops I caught something");
 				e.printStackTrace();
+				
 			}
 			
 		}
@@ -163,6 +174,46 @@ public class Export_VSI_InOrder implements PlugIn {
 		}
 		return rtnval;
 	}
+	
+	public void get_series_data(String fname, int series)
+	{
+		ImageProcessorReader r = new ImageProcessorReader(
+				new ChannelSeparator(LociPrefs.makeImageReader()));
+		Meta_Data rtnval=new Meta_Data();
+		try {
+			try {
+				
+				
+				r.setId(fname);
+				IJ.log("Series count: "+r.getSeriesCount()+","+r.getSeries());
+				if (series>r.getSeriesCount()) return;
+				r.setSeries(series);
+				IJ.log("Current series: "+r.getSeries());
+				rtnval.height=r.getSizeY();
+				rtnval.width=r.getSizeX();
+				
+				IJ.log(""+r.getSizeC());
+				
+				Hashtable meta=r.getSeriesMetadata();
+				if (meta.containsKey("Origin #1"))
+				{
+					IJ.log("I had it");
+					series_list.add(series);
+				}
+				
+			} catch (FormatException e) {
+				IJ.log("Ooops I caught something");
+				e.printStackTrace();
+				
+			}
+			
+		}
+		catch(IOException exc)
+		{
+			IJ.error(exc.getMessage());
+		}
+	}
+
 
 
 

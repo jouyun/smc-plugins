@@ -98,25 +98,28 @@ public class add_channel implements PlugIn{
 		
 		int tmpIndex=gd.getNextChoiceIndex();
 		target_imp=admissibleImageList[tmpIndex];
-		new_imp=NewImage.createFloatImage("Img", width, height, slices*channels+slices, NewImage.FILL_BLACK);
-		for (int i=0; i<slices; i++)
+		new_imp=NewImage.createFloatImage("Img", width, height, slices*frames*channels+slices*frames, NewImage.FILL_BLACK);
+		for (int f=0; f<frames; f++)
 		{
-			for (int j=0; j<channels; j++)
+			for (int i=0; i<slices; i++)
 			{
-				float [] new_tmp=(float []) new_imp.getStack().getProcessor(i*(channels+1)+j+1).getPixels();
-				float [] old_tmp=(float []) imp.getStack().getProcessor(i*channels+j+1).getPixels();
+				for (int j=0; j<channels; j++)
+				{
+					float [] new_tmp=(float []) new_imp.getStack().getProcessor(f*slices*(channels+1)+i*(channels+1)+j+1).getPixels();
+					float [] old_tmp=(float []) imp.getStack().getProcessor(f*slices*channels+i*channels+j+1).getPixels();
+					for (int m=0; m<width*height; m++)
+					{
+						new_tmp[m]=old_tmp[m];
+					}				
+				}
+				float [] new_tmp=(float []) new_imp.getStack().getProcessor(f*slices*(channels+1)+i*(channels+1)+channels+1).getPixels();
+				float [] old_tmp=(float []) target_imp.getStack().getProcessor(f*slices+i+1).getPixels();
 				for (int m=0; m<width*height; m++)
 				{
 					new_tmp[m]=old_tmp[m];
-				}				
+				}
+	
 			}
-			float [] new_tmp=(float []) new_imp.getStack().getProcessor(i*(channels+1)+channels+1).getPixels();
-			float [] old_tmp=(float []) target_imp.getStack().getProcessor(i+1).getPixels();
-			for (int m=0; m<width*height; m++)
-			{
-				new_tmp[m]=old_tmp[m];
-			}
-
 		}
 		new_imp.setDisplayMode(IJ.COMPOSITE);
 		new_imp.setOpenAsHyperStack(true);

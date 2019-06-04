@@ -61,14 +61,26 @@ public class Merge_2D_CountMasks implements PlugIn {
 			y=0;
 			z=0;
 		}
+		public boolean equals(Object object)
+		{
+			boolean same=false;
+			if (object!=null && object instanceof MyIntPoint)
+			{
+				if (x==((MyIntPoint) object).x && y==((MyIntPoint)object).y)
+				{
+					same=true;
+				}
+			}
+			return same;
+		}
 	}
 	ArrayList <ArrayList <MyIntPoint>> point_list=new ArrayList<ArrayList <MyIntPoint>>();
 	ArrayList <MyIntPoint> tmp_point_list=new ArrayList <MyIntPoint>();
 	ArrayList <MyIntPoint> object_point_list[];
-	short [] actual_object;
-	short [] max_idx_this_slice;
+	int [] actual_object;
+	int[] max_idx_this_slice;
 	ImagePlus imp;
-	public void merge_objects(short idA, short idB)
+	public void merge_objects(int idA, int idB)
 	{
 		if (idA>idB)
 		{
@@ -106,24 +118,26 @@ public class Merge_2D_CountMasks implements PlugIn {
 	    
 
 		//Find how many objects there are
-		short max_object_number=0;
+		int max_object_number=0;
 		for (int s=0; s<slices; s++)
 		{
 			short [] current_pix=(short [])imp.getStack().getProcessor(1+s).getPixels();
 			for (int i=0; i<width*height; i++) 
 			{
-				if (current_pix[i]>max_object_number) max_object_number=current_pix[i];
+				int curval=current_pix[i]&0xffff;
+				if (curval>max_object_number) max_object_number=curval;
 			}
 		}
-        
+        //IJ.log("Max object number: " + max_object_number);
+		
 		//Get the points for each object
 		object_point_list=(ArrayList<MyIntPoint>[]) new ArrayList[(int) max_object_number+1];
 		for (int m=0; m<max_object_number+1; m++)
 		{
 			object_point_list[m]=new ArrayList<MyIntPoint>();
 		}	
-		max_idx_this_slice=new short[slices+1];
-		short current_max=0;
+		max_idx_this_slice=new int[slices+1];
+		int current_max=0;
 		for (int s=0; s<slices; s++)
 		{
 			short [] current_pix=(short [])imp.getStack().getProcessor(1+s).getPixels();
@@ -131,7 +145,7 @@ public class Merge_2D_CountMasks implements PlugIn {
 			{
 				for (int y=0; y<height; y++)
 				{
-					short idx=current_pix[x+y*width];
+					int idx=current_pix[x+y*width]&0xffff;
 					if (idx>0) 
 					{
 						object_point_list[(int)idx].add(new MyIntPoint(x,y,s));
@@ -140,20 +154,21 @@ public class Merge_2D_CountMasks implements PlugIn {
 				}
 			}
 			max_idx_this_slice[s+1]=current_max;
+			//IJ.log("Slice: "+(s+1) +" max: "+ max_idx_this_slice[s+1]);
 		}
         
 		//Initialize actual_object array
-		actual_object = new short [max_object_number+1];
-		for (int i=0; i<max_object_number+1; i++) actual_object[i]=(short)i;
+		actual_object = new int [max_object_number+1];
+		for (int i=0; i<max_object_number+1; i++) actual_object[i]=i;
 		
 		//Loop through z, merge two objects when necessary
-		for (int z=0; z<slices-1; z++) 
+		/*for (int z=0; z<slices-1; z++) 
 		{
 			int min_s=max_idx_this_slice[z]+1;
 			int max_s=max_idx_this_slice[z+1];
 			int min_t=max_s+1;
 			int max_t=max_idx_this_slice[z+2];
-			
+			IJ.showProgress(z, slices);
 			for (int s=min_s; s<max_s+1; s++)
 			{
 				for (int t=min_t; t<max_t+1; t++)
@@ -186,7 +201,9 @@ public class Merge_2D_CountMasks implements PlugIn {
 					merge_objects(actual_object[s], actual_object[t]);
 				}
 			}
-		}
+		}*/
+		alternative_searcher();
+		IJ.showProgress(slices, slices);
 		IJ.log("Done merging");
 		//Loop over each object and dilate once as necessary (only x and y for now)
 		for (int m=1; m<max_object_number; m++)
@@ -197,7 +214,7 @@ public class Merge_2D_CountMasks implements PlugIn {
 				MyIntPoint curpt=(MyIntPoint)pF.next();
 				short [] pix=(short [])imp.getStack().getProcessor(curpt.z+1).getPixels();
 				int x=curpt.x, y=curpt.y;
-				pix[x+y*width]=actual_object[m];
+				pix[x+y*width]=(short) actual_object[m];
 			}
 		}
 		
@@ -208,25 +225,36 @@ public class Merge_2D_CountMasks implements PlugIn {
 		
 	}
 	//Make this faster, it is incredibly slow, so that it will look for all of the objects that are above it at all using the original image first
-	/*public void alternative_searcher()
+	public void alternative_searcher()
 	{
 		for (int z=0; z<slices-1; z++) 
 		{
+			IJ.showProgress(z, slices);
+			
 			int min_s=max_idx_this_slice[z]+1;
 			int max_s=max_idx_this_slice[z+1];
+			short [] current_pix=(short [])imp.getStack().getProcessor(2+z).getPixels();
 			
 			for (int s=min_s; s<max_s+1; s++)
 			{
 				//First find all possible t's that might be above
 				ArrayList <Integer> t_list=new ArrayList <Integer> ();
-				short [] pix=img
 				
-				
-				for (int t=min_t; t<max_t+1; t++)
+				//Loop over all points in this s object, add anything above it to t_list
+				ArrayList <MyIntPoint> s_object=object_point_list[s];
+				for (ListIterator pF=s_object.listIterator(); pF.hasNext();)
 				{
+					MyIntPoint curpt=(MyIntPoint)pF.next();
+					int idx=current_pix[curpt.x+curpt.y*width]&0xffff;
+					if (idx<1) continue;
+					if (!t_list.contains(idx)) t_list.add(idx);
+				}
+				
+				for (ListIterator ppF=t_list.listIterator(); ppF.hasNext();)
+				{
+					int t=(Integer)ppF.next();
 					if (object_point_list[t].size()>object_point_list[s].size())
 					{
-						ArrayList <MyIntPoint> s_object=object_point_list[s];
 						int frac=0;
 						for (ListIterator pF=s_object.listIterator(); pF.hasNext();)
 						{
@@ -251,7 +279,8 @@ public class Merge_2D_CountMasks implements PlugIn {
 					//IJ.log("Merging:  "+s+"  "+ t);
 					merge_objects(actual_object[s], actual_object[t]);
 				}
+				
 			}
 		}
-	}*/
+	}
 }
