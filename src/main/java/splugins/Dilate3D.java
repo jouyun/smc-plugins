@@ -222,6 +222,22 @@ public class Dilate3D {
 		}
 		return new_img;
 	}
+	public static ImagePlus make_3D_ImagePlusShort3D(short [][][] pix, int width, int height, int depth)
+	{
+		ImagePlus new_img=NewImage.createShortImage("Dilated", width, height, depth, NewImage.FILL_BLACK);
+		for (int i=0; i<depth; i++)
+		{
+			short [] tmp=(short [])new_img.getStack().getProcessor(i+1).getPixels();
+			for (int x=0; x<width; x++)
+			{
+				for (int y=0; y<height; y++)
+				{
+					tmp[x+y*width]=pix[x][y][i];
+				}
+			}
+		}
+		return new_img;
+	}
 	public static ImagePlus make_3D_ImagePlusFloat3D_multichannel(float [][][][] pix, int width, int height, int depth, int channels)
 	{
 		ImagePlus new_img=NewImage.createFloatImage("Dilated", width, height, depth*channels, NewImage.FILL_BLACK);

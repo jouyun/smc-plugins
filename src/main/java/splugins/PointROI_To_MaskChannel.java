@@ -29,6 +29,7 @@ public class PointROI_To_MaskChannel implements PlugIn {
 	ImagePlus imp;
 	ImagePlus target_imp;
 	ImagePlus new_imp;
+	double blur;
 	public void run (String arg)
 	{
 		imp=WindowManager.getCurrentImage();
@@ -40,6 +41,10 @@ public class PointROI_To_MaskChannel implements PlugIn {
 		cur_slice=imp.getSlice()-1;
 		cur_frame=imp.getFrame()-1;
 		cur_channel=imp.getChannel()-1;
+		GenericDialog gd= new GenericDialog("Choose blur");
+		gd.addNumericField("Blur", 1.0, 1);
+		gd.showDialog();
+		blur=gd.getNextNumber();
 		
 		//Prepare new ImagePlus objects
 		ImagePlus [] img_array = ChannelSplitter.split(imp);
@@ -90,7 +95,7 @@ public class PointROI_To_MaskChannel implements PlugIn {
         		for (int f=0; f<frames; f++)
         		{
         			GaussianBlur gb=new GaussianBlur();
-        			gb.blurGaussian(new_img_array[c].getStack().getProcessor(1+s+f*slices), 1.0);
+        			gb.blurGaussian(new_img_array[c].getStack().getProcessor(1+s+f*slices), blur);
         		}
         	}
         }
