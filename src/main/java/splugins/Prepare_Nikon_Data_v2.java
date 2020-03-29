@@ -58,7 +58,7 @@ public class Prepare_Nikon_Data_v2 implements PlugIn {
 						IJ.log(txt);
 						x_pos[starting_index-1]=Float.parseFloat(txt);
 						IJ.log("X: "+x_pos[starting_index-1]);
-						txt=lines[s+1].substring(18);
+						txt=lines[s+1].substring(8);
 						y_pos[starting_index-1]=Float.parseFloat(txt);
 						
 						WindowManager.getCurrentImage().setTitle("Img"+starting_index);
