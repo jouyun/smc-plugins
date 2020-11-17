@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
@@ -147,6 +148,15 @@ public class Connect_Dots_3D implements PlugIn {
 		width = img.getWidth();
 		height = img.getHeight();
 		slices = img.getImageStackSize();
+		
+		GenericDialog gd = new GenericDialog("Parameters");
+		gd.addCheckbox("Value scales with distance from start?", true);
+		gd.addCheckbox("Reverse order?", false);
+		gd.addNumericField("Radius", 70, 0);
+		gd.showDialog();
+		boolean scale_values = gd.getNextBoolean();
+		boolean reverse_order = gd.getNextBoolean();
+		double radius = gd.getNextNumber();
 		//********************GET THE LIST OF ROIS**************************************************
 		RoiManager manager=RoiManager.getInstance();
     	int selected=manager.getSelectedIndex();
@@ -183,15 +193,30 @@ public class Connect_Dots_3D implements PlugIn {
     			
     			//float distance = current_line.find_distance(img_dis_list.get(p));
     			float distance = current_line.pDistance(img_dis_list.get(p));
-    			if (distance<70*70)
+    			if (distance<radius*radius)
     			{
     				MyPoint real_pos = img_dis_list.get(p).to_pixel();
     				int x = (int)real_pos.x;
     				int y = (int)real_pos.y;
     				int z = (int)real_pos.z;
     				short [] pix = (short [])img.getStack().getPixels(z);
-    				pix[x+width*y] = (short) ((short) r*100);
-    				//pix[x+width*y] = (short) ((short) 60000);
+    				if (scale_values)
+    				{
+    					if (reverse_order) 
+    					{
+    						pix[x+width*y] = (short) (1000+(pix_list.size()-r)*10);
+    					}
+    					else
+    					{
+    						pix[x+width*y] = (short) ((r)*100);
+    					}
+    					
+    				}
+    				else
+    				{
+    					pix[x+width*y] = (short) ((short) 60000);
+    				}
+    				//
     			}
     		}
     	}
