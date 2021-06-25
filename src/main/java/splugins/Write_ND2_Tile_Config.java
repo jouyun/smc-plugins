@@ -9,10 +9,11 @@ import ij.gui.GenericDialog;
 import ij.io.DirectoryChooser;
 import ij.plugin.PlugIn;
 
-public class Stitch_Nikon_Data_v2 implements PlugIn {
+public class Write_ND2_Tile_Config implements PlugIn {
 
 	@Override
-	public void run(String arg0) {
+	public void run(String arg) {
+		// TODO Auto-generated method stub
 		float [] x_pos= new float[100];
 		float [] y_pos = new float[100];
 		int starting_index=1;
@@ -68,6 +69,7 @@ public class Stitch_Nikon_Data_v2 implements PlugIn {
 				
 			}
 		}
+
 		IJ.log("Channels, slices, frames:  "+ cs+","+ss+","+(starting_index-1));  
 		concat_string=concat_string+"image"+starting_index+"=[-- None --]";
 		IJ.run("Concatenate...", concat_string);
@@ -87,8 +89,6 @@ public class Stitch_Nikon_Data_v2 implements PlugIn {
 		}
 		y_pos=tmp;
 		
-		IJ.run("Flip Vertically", "stack");
-		IJ.run("Flip Horizontally", "stack");
 		
 		ImagePlus img=WindowManager.getCurrentImage();
 		float pix_size=(float) ((float)img.getCalibration().pixelWidth*1.2);
@@ -103,8 +103,8 @@ public class Stitch_Nikon_Data_v2 implements PlugIn {
 			y_pos[j]=(float) (y_pos[j]/pix_size);
 		}
 		
-		stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1, fusion_method);
-
+		//stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1, fusion_method);
+		stitch_generic.write_tile_config_alternative_name(dir_name, x_pos, y_pos, "Tiffs");
 	}
 
 }

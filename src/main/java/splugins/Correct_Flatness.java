@@ -224,4 +224,57 @@ public class Correct_Flatness implements PlugIn {
 		
 		return new_img;
 	}
+	
+	public static ImagePlus DoCorrectUsingProvided(ImagePlus img, ImagePlus correction_image)
+	{
+		int width=img.getWidth(), height=img.getHeight(), slices=img.getNSlices(), frames=img.getNFrames(), channels=img.getNChannels();
+		ImagePlus new_img=NewImage.createFloatImage("Result", width, height, slices*frames*channels, NewImage.FILL_BLACK);
+		new_img.setOpenAsHyperStack(true);
+		new_img.setDimensions(channels, slices, frames);
+		
+		float max =0;
+		for (int c=0; c<channels; c++)
+		{
+			float [] corrected_pix = (float []) correction_image.getStack().getProcessor(c+1).getPixels();
+			for (int a=0; a<corrected_pix.length; a++)
+			{
+				float cur = corrected_pix[a];
+				if (cur>max) max=cur;
+			}
+		}
+		
+		for (int c=0; c<channels; c++)
+		{
+			float [] corrected_pix = (float []) correction_image.getStack().getProcessor(c+1).getPixels();
+			for (int a=0; a<corrected_pix.length; a++)
+			{
+				corrected_pix[a] = corrected_pix[a]/max;
+			}
+		}
+		
+		//Divide
+		for (int f=0; f<frames; f++)
+		{
+			for (int s=0; s<slices; s++)
+			{
+				for (int c=0; c<channels; c++)
+				{
+					float [] npix=(float []) new_img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					float [] cpix=(float []) img.getStack().getProcessor(c+s*channels+f*channels*slices+1).getPixels();
+					float [] corrected_pix = (float []) correction_image.getStack().getProcessor(c+1).getPixels();
+					for (int x=0; x<width; x++)
+					{
+						for (int y=0; y<height; y++)
+						{
+							npix[y*width+x]=(cpix[y*width+x]-90)/corrected_pix[y*width+x];
+						}
+					}
+				}
+			}
+		}
+		new_img.setProperty("Info", img.getInfoProperty());
+		new_img.setCalibration(img.getCalibration());
+		
+		return new_img;
+	}
 }
