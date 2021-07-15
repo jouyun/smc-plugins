@@ -417,6 +417,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 		else cur_slice=img.getSlice();
 		My_Frame cur_frame=frame_list.get(cur_slice-1);
 		IJ.log("Current T: "+cur_slice);
+		int z=img.getZ(), f=img.getFrame(), c=img.getChannel();
 		
 		
 		My_ROI the_ROI=find_ROI_containing(cur_frame, x, y);
@@ -432,7 +433,7 @@ public class VSI_Reader_SMC_Fast implements KeyListener, MouseListener, PlugIn {
 			manager=new RoiManager();
 			
 		}
-		
+		my_roi.setPosition(c, z, f);
 		manager.addRoi(my_roi);
 		manager.runCommand("Show All");
 		manager.select(manager.getCount()-1);

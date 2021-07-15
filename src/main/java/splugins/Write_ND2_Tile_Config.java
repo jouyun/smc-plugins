@@ -23,11 +23,15 @@ public class Write_ND2_Tile_Config implements PlugIn {
 		GenericDialog gd=new GenericDialog("Which channel?");
 		gd.addNumericField("Channel to use for stitch", 1, 0);
 		gd.addChoice("Fusion method: ", new String[]{"Max. Intensity", "Linear Blending", "Intensity of random input tile"}, "Max. Intensity");
+		gd.addCheckbox("Flip X?", false);
+		gd.addCheckbox("Flip Y?", false);
 		gd.addCheckbox("Override scaling?", false);
 		gd.addNumericField("Actual scaling: ", 0.0, 3);
 		gd.showDialog();
 		int stitch_channel=(int)gd.getNextNumber();
 		String fusion_method=gd.getNextChoice();
+		boolean flip_x=gd.getNextBoolean();
+		boolean flip_y=gd.getNextBoolean();
 		boolean override_scaling=gd.getNextBoolean();
 		float scaler=(float)gd.getNextNumber();
 		DirectoryChooser dir=new DirectoryChooser("Choose the directory");
@@ -97,10 +101,13 @@ public class Write_ND2_Tile_Config implements PlugIn {
 		{
 			pix_size=(float)scaler;
 		}
+		float x_corr=1, y_corr=1;
+		if (flip_x) x_corr=-1;
+		if (flip_y) x_corr=-1;
 		for (int j=0; j<x_pos.length; j++)
 		{
-			x_pos[j]=(float) (x_pos[j]/pix_size);
-			y_pos[j]=(float) (y_pos[j]/pix_size);
+			x_pos[j]=(float) (x_corr*x_pos[j]/pix_size);
+			y_pos[j]=(float) (y_corr*y_pos[j]/pix_size);
 		}
 		
 		//stitch_generic.stitch_img(WindowManager.getCurrentImage(), x_pos, y_pos, dir_name, stitch_channel-1, fusion_method);
